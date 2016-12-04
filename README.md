@@ -37,7 +37,7 @@ public async Task<IActionResult> SendAsync([FromBody]SimpleModel model)
 
 ### Usage for Trusted Clients or Browsering (DMZ) Layer
 > Startup ConfigureServices
-```
+```charp
 // Client WebSocket - DMZ to API side connections
 services.AddProxyWebSockets(options => {
     options.WebSocketHostAddress = "localhost:7803";
@@ -51,7 +51,6 @@ services.AddNativeWebSockets();
 services.AddMvc();
 ```
 > Startup Configure
-
 ```
 // Proxy (Domain App) Client WebSocket - DMZ to API side connections
 app.UseProxyWebSockets();
