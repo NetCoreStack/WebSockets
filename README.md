@@ -3,7 +3,7 @@
 This project is demonstrate bidirectional connections and data transfers from low level layer (secure zone) to 
 Browsering - DMZ (Public) zone via .NET Core WebSockets.
 
-You can use it on your API - Service side to communicate each other your trusted consumer 
+You can use it on your API - Service side to communicate each other your trusted Backend API consumer 
 Clients (for example MVC Web Application Hosting) and at the same time may 
 client can be a Browser (User-Agent) then you can manage your connections and domain data transfer 
 operations with same interfaces.
@@ -24,7 +24,8 @@ public MyController(IConnectionManager connectionManager)
 {
     _connectionManager = connectionManager;
 }
-
+```
+```
 [HttpPost(nameof(SendAsync))]
 public async Task<IActionResult> SendAsync([FromBody]SimpleModel model)
 {
