@@ -24,8 +24,6 @@ public MyController(IConnectionManager connectionManager)
 {
     _connectionManager = connectionManager;
 }
-```
-```
 [HttpPost(nameof(SendAsync))]
 public async Task<IActionResult> SendAsync([FromBody]SimpleModel model)
 {
@@ -53,14 +51,16 @@ services.AddNativeWebSockets();
 services.AddMvc();
 ```
 > Startup Configure
+
 ```
 // Proxy (Domain App) Client WebSocket - DMZ to API side connections
 app.UseProxyWebSockets();
-
 // User Agent WebSockets for Browsers
 app.UseNativeWebSockets();
 ```
+
 > Invocator With Dependency Injection on Clients
+
 ```
 public class CustomWebSocketCommandInvocator : IClientWebSocketCommandInvocator
 {
@@ -79,10 +79,10 @@ public class CustomWebSocketCommandInvocator : IClientWebSocketCommandInvocator
 }
 ```
 
-#### Prerequisites
+### Prerequisites
 > [ASP.NET Core](https://github.com/aspnet/Home)
 
-#### Installation
+### Installation
 
 > dotnet restore
   
