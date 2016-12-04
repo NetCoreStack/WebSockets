@@ -9,21 +9,25 @@ client can be a Browser (User-Agent) then you can manage your connections and do
 operations with same interfaces.
 
 ### Usage for API - Service Layer
-> Startup ConfigureServices
-```
+
+#### Startup ConfigureServices
+```csharp
 // Add Net Core Stack socket services.
 services.AddNativeWebSockets();
 ```
-> Startup Configure
-```
+
+#### Startup Configure
+```csharp
  app.UseNativeWebSockets();
- ```
-> Controller with Dependency Injection
 ```
+
+#### Controller with Dependency Injection
+```csharp
 public MyController(IConnectionManager connectionManager)
 {
     _connectionManager = connectionManager;
 }
+
 [HttpPost(nameof(SendAsync))]
 public async Task<IActionResult> SendAsync([FromBody]SimpleModel model)
 {
@@ -36,8 +40,8 @@ public async Task<IActionResult> SendAsync([FromBody]SimpleModel model)
 ```
 
 ### Usage for Trusted Clients or Browsering (DMZ) Layer
-> Startup ConfigureServices
-```charp
+#### Startup ConfigureServices
+```csharp
 // Client WebSocket - DMZ to API side connections
 services.AddProxyWebSockets(options => {
     options.WebSocketHostAddress = "localhost:7803";
@@ -50,17 +54,17 @@ services.AddNativeWebSockets();
 // Add MVC framework services.
 services.AddMvc();
 ```
-> Startup Configure
-```
+#### Startup Configure
+```csharp
 // Proxy (Domain App) Client WebSocket - DMZ to API side connections
 app.UseProxyWebSockets();
 // User Agent WebSockets for Browsers
 app.UseNativeWebSockets();
 ```
 
-> Invocator With Dependency Injection on Clients
+#### Invocator With Dependency Injection on Clients
 
-```
+```csharp
 public class CustomWebSocketCommandInvocator : IClientWebSocketCommandInvocator
 {
     private readonly IConnectionManager _connectionManager;
