@@ -3,9 +3,8 @@ init:
 branches:
   only:
     - master
-    - release
-    - dev
-    - /^(.*\/)?ci-.*$/
+artifacts:
+  - path: artifacts\build\*.nupkg
 build_script:
   - build.cmd --quiet verify
 clone_depth: 1
