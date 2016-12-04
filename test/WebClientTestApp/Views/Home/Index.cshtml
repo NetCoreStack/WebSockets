@@ -1,0 +1,181 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<style>
+    table {
+        border: 0;
+    }
+
+    .row-data {
+        font-family: Consolas, Courier New, Courier, monospace;
+    }
+
+    .row-server {
+        background-color: blue;
+        color: white;
+    }
+
+    .row-client {
+        background-color: green;
+        color: white;
+    }
+</style>
+
+<br />
+<div id="connectionContainer">
+    <div class="row">
+        <div class="col-sm-12 col-md-12 col-lg-12">
+            <div class="alert alert-warning" data-bind="html: logInfo">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-6">
+            <div class="form-horizontal">
+                <div class="input-group">
+                    <input type="text" class="form-control" disabled="disabled" data-bind="value: connectionUrl">
+                    <div class="input-group-btn">
+                        <button type="button" data-bind="click: connect, text: connectionState, css: connectionStatus">
+                        </button>
+                    </div>
+                </div>
+                <br />
+                <div class="input-group" data-bind="visible: connectionState() == 'Connected'">
+                    <input type="text" class="form-control" data-bind="value: data" placeholder="Data">
+                    <div class="input-group-btn">
+                        <button type="button" class="btn btn-default" data-bind="click: sendData">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-6 col-lg-6" data-bind="visible: connectionState() == 'Connected'">
+            <button type="button" class="btn btn-default" data-bind="click: closeConnection">Close</button>
+        </div>
+    </div>
+    <br />
+    <div class="col-sm-12 col-md-12 col-lg-12" data-bind="visible: connectionState() == 'Connected'">
+        <table class="table" style="width: 800px">
+            <thead>
+                <tr>
+                    <th style="width: 100px">From</th>
+                    <th style="width: 100px">To</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: dataRows">
+                <tr>
+                    <td data-bind="text: dataFrom, css: colorFrom"></td>
+                    <td data-bind="text: dataTo, css: colorTo"></td>
+                    <td data-bind="text: context"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+
+        $(function () {
+            'use strict';
+
+            var containerId = "connectionContainer";
+            var scheme = document.location.protocol == "https:" ? "wss" : "ws";
+            var port = document.location.port ? (":" + document.location.port) : "";
+            var socket;
+
+            var state = {
+                connect: "Connect",
+                connecting: "Connecting...",
+                connected: "Connected"
+            }
+
+            var ViewModel = function () {
+                var that = this;
+                this.data = ko.observable();
+                this.dataRows = ko.observableArray([]);
+                this.connectionUrl = ko.observable(scheme + "://" + document.location.hostname + port);
+                this.logInfo = ko.observable("Waiting for connection. To connect click the Connect button");
+                this.connectionState = ko.observable(state.connect);
+                this.connectionStatus = ko.pureComputed(function () {
+
+                    if (this.connectionState() == state.connect) {
+                        return "btn btn-primary";
+                    }
+                    if (this.connectionState() == state.connecting) {
+                        return "btn btn-info";
+                    }
+                    if (this.connectionState() == state.connected) {
+                        return "btn btn-success";
+                    }
+                }, that);
+
+                this.connect = function (vm, sender) {
+
+                    if (vm.connectionState == state.connected) {
+                        return;
+                    }
+
+                    vm.logInfo("Connecting...");
+                    socket = new WebSocket(vm.connectionUrl());
+                    socket.onopen = function (event) {
+                        vm.connectionState(state.connected);
+                        vm.logInfo("Connection opened");
+                    };
+                    socket.onclose = function (event) {
+                        vm.connectionState(state.connect);
+                        vm.logInfo('Connection closed. Code: ' + event.code + '. Reason: ' + event.reason + '');
+                    };
+                    socket.onerror = function () {
+                        switch (socket.readyState) {
+                            case WebSocket.CLOSED:
+                                vm.connectionState(state.connect);
+                                vm.logInfo("Connection closed");
+                                break;
+                            default:
+                                vm.logInfo("Unknown WebSocket State: " + socket.readyState);
+                                break;
+                        }
+                    };
+                    socket.onmessage = function (event) {
+                        var row = {
+                            dataFrom: "Server",
+                            dataTo: "Client",
+                            colorFrom: "row-server",
+                            colorTo: "row-client",
+                            context: event.data
+                        };
+                        vm.dataRows.push(row);
+                    };
+                };
+
+                this.closeConnection = function (vm, sender) {
+                    if (!socket || socket.readyState != WebSocket.OPEN) {
+                        vm.logInfo("Not connected!");
+                    }
+                    socket.close(1000, "Closing from client");
+                    vm.dataRows([]);
+                };
+
+                this.sendData = function (vm, sender) {
+                    if (!socket || socket.readyState != WebSocket.OPEN) {
+                        vm.logInfo("Not connected!");
+                    }
+                    var data = vm.data();
+                    socket.send(data);
+                    var row = {
+                        dataFrom: "Client",
+                        dataTo: "Server",
+                        colorFrom: "row-client",
+                        colorTo: "row-server",
+                        context: data
+                    };
+                    vm.dataRows.push(row);
+                }
+            };
+
+            ko.applyBindings(new ViewModel(), document.getElementById(containerId));
+        });
+    </script>
+}
