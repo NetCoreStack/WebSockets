@@ -10,6 +10,7 @@ namespace NetCoreStack.WebSockets
         ServerClose = 4,
         ServerAbort = 8,
         CacheReady = 16,
-        All = 31
+        CacheInvalidate = 32,
+        All = 63
     }
 }

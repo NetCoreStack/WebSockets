@@ -8,8 +8,6 @@ Clients (for example MVC Web Application Hosting) and at the same time may
 client can be a Browser (User-Agent) then you can manage your connections and domain data transfer 
 operations with same interfaces.
 
-![](https://ci.appveyor.com/api/projects/status/h8hcoiol8as0ok24?svg=true)
-
 ### Usage for API - Service Layer
 
 #### Startup ConfigureServices
