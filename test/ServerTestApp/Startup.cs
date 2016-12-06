@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets;
+using NetCoreStack.WebSockets.Common;
 using Swashbuckle.Swagger.Model;
 using System.IO;
 
@@ -38,9 +39,11 @@ namespace ServerTestApp
                 c.DescribeAllEnumsAsStrings();
             });
 
+            services.AddTransient<IHandshakeStateTransport, MyHandshakeStateTransport>();
+
             // Add Net Core Stack socket services.
             services.AddNativeWebSockets();
-
+            
             // Add framework services.
             services.AddMvc();
         }

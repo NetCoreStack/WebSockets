@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NetCoreStack.WebSockets.Common;
 using NetCoreStack.WebSockets.Internal;
 using System;
@@ -14,7 +15,7 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentNullException(nameof(services));
             }
 
-            services.AddTransient<IHandshakeStateTransport, DefaultHandshakeStateTransport>();
+            services.TryAdd(ServiceDescriptor.Transient<IHandshakeStateTransport, DefaultHandshakeStateTransport>());
             services.AddSingleton<IConnectionManager, ConnectionManager>();
         }
     }
