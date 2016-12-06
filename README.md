@@ -1,12 +1,12 @@
 ### Cross-Platform WebSockets From Browsering (DMZ) Zone to API - Service (Backend) Zone
 
-This project is demonstrate bidirectional connections and data transfers from low level layer (secure zone) to 
+This project is demonstrating bidirectional connection and data transfer from low level layer (secure zone) to 
 Browsering - DMZ (Public) zone via .NET Core WebSockets.
 
-You can use it on your API - Service side to communicate each other your trusted Backend API consumer 
+You can use it on your API - Service side to communicate among your trusted Backend API consumer 
 Clients (for example MVC Web Application Hosting) and at the same time may 
-client can be a Browser (User-Agent) then you can manage your connections and domain data transfer 
-operations with same interfaces.
+client to be a Browser (User-Agent) then you can manage your connection and domain data transfer 
+operation with same interface.
 
 [Latest release on Nuget](https://www.nuget.org/packages/NetCoreStack.WebSockets/)
 
