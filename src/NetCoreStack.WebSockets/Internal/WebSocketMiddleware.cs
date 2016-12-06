@@ -1,16 +1,19 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using NetCoreStack.WebSockets.Common;
 using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets.Internal
 {
     public class WebSocketMiddleware
     {
-        private readonly RequestDelegate next;
+        private readonly IHandshakeStateTransport _initState;
+        private readonly RequestDelegate _next;
 
-        public WebSocketMiddleware(RequestDelegate next)
+        public WebSocketMiddleware(RequestDelegate next, IHandshakeStateTransport initState)
         {
-            this.next = next;
+            _next = next;
+            _initState = initState;
         }
 
         public async Task Invoke(HttpContext httpContext, 
@@ -20,11 +23,11 @@ namespace NetCoreStack.WebSockets.Internal
             if (httpContext.WebSockets.IsWebSocketRequest)
             {
                 var webSocket = await httpContext.WebSockets.AcceptWebSocketAsync();
-                await manager.Handshake(webSocket);
+                await manager.Handshake(webSocket, _initState);
             }
             else
             {
-                await next(httpContext);
+                await _next(httpContext);
             }
         }
     }

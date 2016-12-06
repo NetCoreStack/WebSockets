@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using NetCoreStack.WebSockets.Common;
 using System;
 using System.Linq;
 
@@ -9,6 +10,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
     {
         public static void AddProxyWebSockets(this IServiceCollection services, Action<ConnectorOptions> setup)
         {
+            services.AddTransient<IHandshakeStateTransport, DefaultHandshakeStateTransport>();
             services.AddSingleton<IWebSocketConnector, ClientWebSocketConnector>();
             services.AddSingleton<InvocatorRegistry>();
             var connectorOptions = new ConnectorOptions { };

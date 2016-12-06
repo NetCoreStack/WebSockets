@@ -4,6 +4,7 @@
     {
         public WebSocketCommands? Command { get; set; }
         public object Value { get; set; }
+        public object State { get; set; }
 
         public string CommandText
         {
