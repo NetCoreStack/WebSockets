@@ -8,6 +8,9 @@ Clients (for example MVC Web Application Hosting) and at the same time may
 client can be a Browser (User-Agent) then you can manage your connections and domain data transfer 
 operations with same interfaces.
 
+[Latest release on Nuget]("https://www.nuget.org/packages/NetCoreStack.WebSockets/")
+
+
 ### Usage for API - Service Layer
 
 #### Startup ConfigureServices
@@ -58,8 +61,12 @@ services.AddMvc();
 ```csharp
 // Proxy (Domain App) Client WebSocket - DMZ to API side connections
 app.UseProxyWebSockets();
+
 // User Agent WebSockets for Browsers
 app.UseNativeWebSockets();
+
+// Use MVC
+app.UseMvc();
 ```
 
 #### Invocator With Dependency Injection on Clients
