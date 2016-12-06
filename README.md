@@ -8,7 +8,7 @@ Clients (for example MVC Web Application Hosting) and at the same time may
 client can be a Browser (User-Agent) then you can manage your connections and domain data transfer 
 operations with same interfaces.
 
-[Latest release on Nuget]("https://www.nuget.org/packages/NetCoreStack.WebSockets/")
+[Latest release on Nuget](https://www.nuget.org/packages/NetCoreStack.WebSockets/)
 
 
 ### Usage for API - Service Layer
