@@ -19,7 +19,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             if (webSocketConnector != null && appLifeTime != null)
             {
                 appLifeTime.ApplicationStopping.Register(OnShutdown, webSocketConnector);
-                Task.Run(async () => await webSocketConnector.InitializeAsync());
+                Task.Run(async () => await webSocketConnector.ConnectAsync());
             }
 
             return app;

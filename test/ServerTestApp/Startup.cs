@@ -39,6 +39,14 @@ namespace ServerTestApp
                 c.DescribeAllEnumsAsStrings();
             });
 
+            services.AddMemoryCache();
+
+            services.AddDistributedRedisCache(options =>
+            {
+                options.Configuration = "localhost";
+                options.InstanceName = "SocketsInstance";
+            });
+
             services.AddTransient<IHandshakeStateTransport, MyHandshakeStateTransport>();
 
             // Add Net Core Stack socket services.

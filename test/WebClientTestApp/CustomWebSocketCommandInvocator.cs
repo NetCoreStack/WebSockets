@@ -1,6 +1,7 @@
 ﻿using NetCoreStack.WebSockets;
-using NetCoreStack.WebSockets.ProxyClient;
 using NetCoreStack.WebSockets.Internal;
+using NetCoreStack.WebSockets.ProxyClient;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 
 namespace WebClientTestApp
@@ -13,11 +14,20 @@ namespace WebClientTestApp
             _connectionManager = connectionManager;
         }
 
-        public Task InvokeAsync(WebSocketMessageContext context)
+        public async Task InvokeAsync(WebSocketMessageContext context)
         {
+            if (context.MessageType == WebSocketMessageType.Binary)
+            {
+                var state = context.State as SocketObject;
+                if (state != null)
+                {
+                    var properties = state.ToJson();
+                }
+                var content = context.Value;
+            }
+
             // Sending incoming data from Backend zone to the Clients (Browsers)
-            _connectionManager.BroadcastAsync(context);
-            return Task.CompletedTask;
+            await _connectionManager.BroadcastAsync(context);
         }
     }
 }

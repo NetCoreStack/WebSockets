@@ -4,7 +4,8 @@ namespace NetCoreStack.WebSockets.ProxyClient
 {
     public interface IWebSocketConnector
     {
-        Task InitializeAsync();
+        Task ConnectAsync();
         Task SendAsync(WebSocketMessageContext context);
+        Task SendBinaryAsync(byte[] bytes);
     }
 }

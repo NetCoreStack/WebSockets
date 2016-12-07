@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets;
 using NetCoreStack.WebSockets.Internal;
@@ -13,11 +15,17 @@ namespace ServerTestApp.Controllers
     {
         private readonly ILoggerFactory _loggerFactory;
         private readonly IConnectionManager _connectionManager;
+        private readonly IDistributedCache _distrubutedCache;
+        private readonly IMemoryCache _memoryCache;
 
         public DiscoveryController(IConnectionManager connectionManager, 
+            IDistributedCache distrubutedCache,
+            IMemoryCache memoryCache,
             ILoggerFactory loggerFactory)
         {
             _connectionManager = connectionManager;
+            _distrubutedCache = distrubutedCache;
+            _memoryCache = memoryCache;
             _loggerFactory = loggerFactory;
         }
 
@@ -34,6 +42,22 @@ namespace ServerTestApp.Controllers
             var obj = new { message = echo };
             var webSocketContext = new WebSocketMessageContext { Command = WebSocketCommands.DataSend, Value = obj };
             await _connectionManager.BroadcastAsync(webSocketContext);
+            return Ok();
+        }
+
+        [HttpPost(nameof(SendBinaryAsync))]
+        public async Task<IActionResult> SendBinaryAsync([FromBody]SimpleModel model)
+        {
+            var bytes = _distrubutedCache.Get(model.Message);
+            await _connectionManager.SendBinaryAsync(model.ConnectionId, bytes, new SocketObject { Key = model.Message });
+            return Ok();
+        }
+
+        [HttpPost(nameof(SendBinaryFromMemoryAsync))]
+        public async Task<IActionResult> SendBinaryFromMemoryAsync([FromBody]SimpleModel model)
+        {
+            var bytes = (byte[])_memoryCache.Get(model.Message);
+            await _connectionManager.SendBinaryAsync(model.ConnectionId, bytes, new SocketObject { Key = model.Message });
             return Ok();
         }
     }

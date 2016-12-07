@@ -1,7 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
+using System.IO;
+using System.Linq;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -79,6 +83,48 @@ namespace NetCoreStack.WebSockets.Internal
             };
 
             await SendAsync(transport, descriptor);
+        }
+
+        public async Task SendBinaryAsync(string connectionId, byte[] bytes, JsonObject properties)
+        {
+            WebSocketTransport transport = null;
+            if (!Connections.TryGetValue(connectionId, out transport))
+            {
+                throw new ArgumentOutOfRangeException(nameof(transport));
+            }
+
+            var props = JsonConvert.SerializeObject(properties);
+            var propsBytes = Encoding.UTF8.GetBytes($"{SocketsConstants.Splitter}{props}");
+
+            var bytesCount = bytes.Length;
+            bytes = bytes.Concat(propsBytes).ToArray();
+
+            var buffer = new byte[SocketsConstants.ChunkSize];
+            using (var ms = new MemoryStream(bytes))
+            {
+                using (BinaryReader br = new BinaryReader(ms))
+                {
+                    byte[] chunkBytes = null;
+                    do
+                    {
+                        chunkBytes = br.ReadBytes(SocketsConstants.ChunkSize);
+                        var segments = new ArraySegment<byte>(chunkBytes);
+                        var endOfMessage = false;
+
+                        if (chunkBytes.Length < SocketsConstants.ChunkSize)
+                            endOfMessage = true;
+
+                        await transport.WebSocket.SendAsync(segments, 
+                            WebSocketMessageType.Binary, 
+                            endOfMessage, 
+                            CancellationToken.None);
+
+                        if (endOfMessage)
+                            break;
+
+                    } while (chunkBytes.Length <= SocketsConstants.ChunkSize);
+                }
+            }
         }
 
         public async Task SendAsync(string connectionId, WebSocketMessageContext context, WebSocket webSocket)
