@@ -14,8 +14,10 @@ namespace NetCoreStack.WebSockets.ProxyClient
         public ConnectorOptions()
         {
             Invocators = new List<Type>();
+            ConnectorName = "";
         }
 
+        public string ConnectorName { get; set; }
         public string WebSocketHostAddress { get; set; }
         public void RegisterInvocator<TInvocator>(WebSocketCommands commands) 
             where TInvocator : IClientWebSocketCommandInvocator

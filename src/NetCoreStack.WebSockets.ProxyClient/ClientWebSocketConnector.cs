@@ -35,7 +35,10 @@ namespace NetCoreStack.WebSockets.ProxyClient
                         _connectionId = context.Value.ToString();
 
                     var _invocators = _invocatorRegistry.GetInvocators(context);
-                    _invocators.ForEach(async x => await x.InvokeAsync(context));
+                    foreach (var invoker in _invocators)
+                    {
+                        await invoker.InvokeAsync(context);
+                    }
                     result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 }
 
@@ -63,7 +66,10 @@ namespace NetCoreStack.WebSockets.ProxyClient
                     }
                     var context = result.ToBinaryContext(binaryResult);
                     var _invocators = _invocatorRegistry.GetInvocators(context);
-                    _invocators.ForEach(async x => await x.InvokeAsync(context));
+                    foreach (var invoker in _invocators)
+                    {
+                        await invoker.InvokeAsync(context);
+                    }
                     result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 }
             }
@@ -72,10 +78,23 @@ namespace NetCoreStack.WebSockets.ProxyClient
 
         public async Task ConnectAsync()
         {
-            var uri = new Uri($"ws://{_options.WebSocketHostAddress}");
-            _webSocket = new ClientWebSocket();
-            await _webSocket.ConnectAsync(uri, CancellationToken.None);
-            await Task.WhenAll(Receive());
+            try
+            {
+                var name = _options.ConnectorName;
+                var uri = new Uri($"ws://{_options.WebSocketHostAddress}");
+                _webSocket = new ClientWebSocket();
+                await _webSocket.ConnectAsync(uri, CancellationToken.None);
+                await Receive();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                if (_webSocket != null)
+                    _webSocket.Dispose();
+            }
         }
 
         public async Task SendAsync(WebSocketMessageContext context)
