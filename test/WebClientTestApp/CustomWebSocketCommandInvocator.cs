@@ -14,6 +14,11 @@ namespace WebClientTestApp
             _connectionManager = connectionManager;
         }
 
+        private Task InternalMethodAsync()
+        {
+            return Task.CompletedTask;
+        }
+
         public async Task InvokeAsync(WebSocketMessageContext context)
         {
             if (context.MessageType == WebSocketMessageType.Binary)

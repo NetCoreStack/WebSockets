@@ -45,8 +45,8 @@ namespace ServerTestApp.Controllers
             return Ok();
         }
 
-        [HttpPost(nameof(BrodcastBinaryAsync))]
-        public async Task<IActionResult> BrodcastBinaryAsync([FromBody]SimpleModel model)
+        [HttpPost(nameof(BroadcastBinaryAsync))]
+        public async Task<IActionResult> BroadcastBinaryAsync([FromBody]SimpleModel model)
         {
             var bytes = _distrubutedCache.Get(model.Key);
             await _connectionManager.BroadcastBinaryAsync(bytes, new SocketObject { Key = model.Key });

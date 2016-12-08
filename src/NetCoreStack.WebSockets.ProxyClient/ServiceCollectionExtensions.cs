@@ -19,7 +19,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             {
                 foreach (var invocator in connectorOptions.Invocators)
                 {
-                    services.AddSingleton(invocator);
+                    services.AddTransient(invocator);
                 }
             }
 

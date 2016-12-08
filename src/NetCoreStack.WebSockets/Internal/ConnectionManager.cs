@@ -54,7 +54,7 @@ namespace NetCoreStack.WebSockets.Internal
                 CancellationToken.None);
         }
 
-        private async Task SendBinaryAsync(WebSocketTransport transport, byte[] chunkedBytes, bool endOfMessage)
+        private async Task SendBinaryAsync(WebSocketTransport transport, byte[] chunkedBytes, bool endOfMessage, CancellationToken token)
         {
             if (transport == null)
             {
@@ -66,7 +66,7 @@ namespace NetCoreStack.WebSockets.Internal
             await transport.WebSocket.SendAsync(segments,
                            WebSocketMessageType.Binary,
                            endOfMessage,
-                           CancellationToken.None);
+                           token);
         }
 
         public async Task BroadcastAsync(WebSocketMessageContext context)
@@ -115,7 +115,7 @@ namespace NetCoreStack.WebSockets.Internal
 
                         foreach (var connection in Connections)
                         {
-                            await SendBinaryAsync(transport: connection.Value, chunkedBytes: chunkedBytes, endOfMessage: endOfMessage);
+                            await SendBinaryAsync(connection.Value, chunkedBytes, endOfMessage, CancellationToken.None);
                         }
 
                         if (endOfMessage)

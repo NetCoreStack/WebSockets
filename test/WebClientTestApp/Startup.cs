@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets;
 using NetCoreStack.WebSockets.ProxyClient;
+using System;
 using System.IO;
 
 namespace WebClientTestApp
@@ -18,6 +19,7 @@ namespace WebClientTestApp
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
+
             Configuration = builder.Build();
         }
 
@@ -28,6 +30,7 @@ namespace WebClientTestApp
         {
             // Client WebSocket - DMZ to API side connections
             services.AddProxyWebSockets(options => {
+                options.ConnectorName = Environment.MachineName;
                 options.WebSocketHostAddress = "localhost:7803";
                 options.RegisterInvocator<CustomWebSocketCommandInvocator>(WebSocketCommands.All);
             });
@@ -35,8 +38,10 @@ namespace WebClientTestApp
             // WebSockets for Browsers - User Agent ( javascript clients )
             services.AddNativeWebSockets();
 
-            // Add MVC framework services.
-            services.AddMvc();
+            // Add framework services.
+            services.AddMvc(options => {
+                options.Filters.Add(new ClientExceptionFilterAttribute());
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
