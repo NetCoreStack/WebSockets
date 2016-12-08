@@ -38,26 +38,34 @@ namespace ServerTestApp.Controllers
         [HttpPost(nameof(SendAsync))]
         public async Task<IActionResult> SendAsync([FromBody]SimpleModel model)
         {
-            var echo = $"Echo from server '{model.Message}' - {DateTime.Now}";
+            var echo = $"Echo from server '{model.Key}' - {DateTime.Now}";
             var obj = new { message = echo };
             var webSocketContext = new WebSocketMessageContext { Command = WebSocketCommands.DataSend, Value = obj };
             await _connectionManager.BroadcastAsync(webSocketContext);
             return Ok();
         }
 
+        [HttpPost(nameof(BrodcastBinaryAsync))]
+        public async Task<IActionResult> BrodcastBinaryAsync([FromBody]SimpleModel model)
+        {
+            var bytes = _distrubutedCache.Get(model.Key);
+            await _connectionManager.BroadcastBinaryAsync(bytes, new SocketObject { Key = model.Key });
+            return Ok();
+        }
+
         [HttpPost(nameof(SendBinaryAsync))]
         public async Task<IActionResult> SendBinaryAsync([FromBody]SimpleModel model)
         {
-            var bytes = _distrubutedCache.Get(model.Message);
-            await _connectionManager.SendBinaryAsync(model.ConnectionId, bytes, new SocketObject { Key = model.Message });
+            var bytes = _distrubutedCache.Get(model.Key);
+            await _connectionManager.SendBinaryAsync(model.ConnectionId, bytes, new SocketObject { Key = model.Key });
             return Ok();
         }
 
         [HttpPost(nameof(SendBinaryFromMemoryAsync))]
         public async Task<IActionResult> SendBinaryFromMemoryAsync([FromBody]SimpleModel model)
         {
-            var bytes = (byte[])_memoryCache.Get(model.Message);
-            await _connectionManager.SendBinaryAsync(model.ConnectionId, bytes, new SocketObject { Key = model.Message });
+            var bytes = (byte[])_memoryCache.Get(model.Key);
+            await _connectionManager.SendBinaryAsync(model.ConnectionId, bytes, new SocketObject { Key = model.Key });
             return Ok();
         }
     }
