@@ -22,6 +22,20 @@ namespace NetCoreStack.WebSockets.Internal
             Connections = new ConcurrentDictionary<string, WebSocketTransport>();
         }
 
+        private void PrepareBytes(ref byte[] bytes, JsonObject properties)
+        {
+            if (bytes == null)
+            {
+                throw new ArgumentNullException(nameof(bytes));
+            }
+
+            var props = JsonConvert.SerializeObject(properties);
+            var propsBytes = Encoding.UTF8.GetBytes($"{SocketsConstants.Splitter}{props}");
+
+            var bytesCount = bytes.Length;
+            bytes = bytes.Concat(propsBytes).ToArray();
+        }
+
         private async Task SendAsync(WebSocketTransport transport, WebSocketMessageDescriptor descriptor)
         {
             if (descriptor == null)
@@ -38,6 +52,21 @@ namespace NetCoreStack.WebSockets.Internal
                 descriptor.MessageType, 
                 descriptor.EndOfMessage, 
                 CancellationToken.None);
+        }
+
+        private async Task SendBinaryAsync(WebSocketTransport transport, byte[] chunkedBytes, bool endOfMessage)
+        {
+            if (transport == null)
+            {
+                throw new ArgumentNullException(nameof(transport));
+            }
+
+            var segments = new ArraySegment<byte>(chunkedBytes);
+
+            await transport.WebSocket.SendAsync(segments,
+                           WebSocketMessageType.Binary,
+                           endOfMessage,
+                           CancellationToken.None);
         }
 
         public async Task BroadcastAsync(WebSocketMessageContext context)
@@ -64,6 +93,37 @@ namespace NetCoreStack.WebSockets.Internal
             {
                 await SendAsync(connection.Value, descriptor);
             }
+        }
+
+        public async Task BroadcastBinaryAsync(byte[] bytes, JsonObject properties)
+        {
+            PrepareBytes(ref bytes, properties);
+
+            var buffer = new byte[SocketsConstants.ChunkSize];
+            using (var ms = new MemoryStream(bytes))
+            {
+                using (BinaryReader br = new BinaryReader(ms))
+                {
+                    byte[] chunkedBytes = null;
+                    do
+                    {
+                        chunkedBytes = br.ReadBytes(SocketsConstants.ChunkSize);
+                        var endOfMessage = false;
+
+                        if (chunkedBytes.Length < SocketsConstants.ChunkSize)
+                            endOfMessage = true;
+
+                        foreach (var connection in Connections)
+                        {
+                            await SendBinaryAsync(transport: connection.Value, chunkedBytes: chunkedBytes, endOfMessage: endOfMessage);
+                        }
+
+                        if (endOfMessage)
+                            break;
+
+                    } while (chunkedBytes.Length <= SocketsConstants.ChunkSize);
+                }
+            }            
         }
 
         public async Task SendAsync(string connectionId, WebSocketMessageContext context)
@@ -93,11 +153,7 @@ namespace NetCoreStack.WebSockets.Internal
                 throw new ArgumentOutOfRangeException(nameof(transport));
             }
 
-            var props = JsonConvert.SerializeObject(properties);
-            var propsBytes = Encoding.UTF8.GetBytes($"{SocketsConstants.Splitter}{props}");
-
-            var bytesCount = bytes.Length;
-            bytes = bytes.Concat(propsBytes).ToArray();
+            PrepareBytes(ref bytes, properties);
 
             var buffer = new byte[SocketsConstants.ChunkSize];
             using (var ms = new MemoryStream(bytes))

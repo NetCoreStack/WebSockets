@@ -44,7 +44,7 @@ namespace ServerTestApp
             services.AddDistributedRedisCache(options =>
             {
                 options.Configuration = "localhost";
-                options.InstanceName = "SocketsInstance";
+                options.InstanceName = "RedisInstance";
             });
 
             services.AddTransient<IHandshakeStateTransport, MyHandshakeStateTransport>();
