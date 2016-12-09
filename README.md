@@ -15,8 +15,10 @@ operation with same interface.
 
 #### Startup ConfigureServices
 ```csharp
-// Add Net Core Stack socket services.
-services.AddNativeWebSockets();
+// Add NetCoreStack Native Socket Services.
+services.AddNativeWebSockets(options => {
+    options.RegisterInvocator<ServerWebSocketCommandInvocator>(WebSocketCommands.All);
+});
 ```
 
 #### Startup Configure
@@ -52,7 +54,9 @@ services.AddProxyWebSockets(options => {
 });
 
 // WebSockets for Browsers - User Agent ( javascript clients )
-services.AddNativeWebSockets();
+services.AddNativeWebSockets(options => {
+    options.RegisterInvocator<AgentsWebSocketCommandInvocator>(WebSocketCommands.All);
+});
 
 // Add MVC framework services.
 services.AddMvc();

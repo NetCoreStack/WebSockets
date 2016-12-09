@@ -30,6 +30,9 @@ namespace WebClientTestApp
                 var content = context.Value;
             }
 
+            var length = context.Length;
+            double size = (length / 1024f) / 1024f; 
+            context.Value = $"{size} MB <<binary>>";
             // Sending incoming data from Backend zone to the Clients (Browsers)
             await _connectionManager.BroadcastAsync(context);
         }

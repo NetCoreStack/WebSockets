@@ -3,9 +3,9 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets;
-using NetCoreStack.WebSockets.Internal;
 using ServerTestApp.Models;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ServerTestApp.Controllers
@@ -49,23 +49,39 @@ namespace ServerTestApp.Controllers
         public async Task<IActionResult> BroadcastBinaryAsync([FromBody]SimpleModel model)
         {
             var bytes = _distrubutedCache.Get(model.Key);
-            await _connectionManager.BroadcastBinaryAsync(bytes, new SocketObject { Key = model.Key });
+            if (bytes != null)
+            {
+                await _connectionManager.BroadcastBinaryAsync(bytes, new SocketObject { Key = model.Key });
+            }
             return Ok();
         }
 
         [HttpPost(nameof(SendBinaryAsync))]
-        public async Task<IActionResult> SendBinaryAsync([FromBody]SimpleModel model)
+        public async Task<IActionResult> SendBinaryAsync([FromBody]Context model)
         {
-            var bytes = _distrubutedCache.Get(model.Key);
-            await _connectionManager.SendBinaryAsync(model.ConnectionId, bytes, new SocketObject { Key = model.Key });
-            return Ok();
-        }
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
 
-        [HttpPost(nameof(SendBinaryFromMemoryAsync))]
-        public async Task<IActionResult> SendBinaryFromMemoryAsync([FromBody]SimpleModel model)
-        {
-            var bytes = (byte[])_memoryCache.Get(model.Key);
-            await _connectionManager.SendBinaryAsync(model.ConnectionId, bytes, new SocketObject { Key = model.Key });
+            if (model.Keys == null || !model.Keys.Any())
+            {
+                return NotFound();
+            }
+
+            foreach (var key in model.Keys)
+            {
+                try
+                {
+                    var bytes = _distrubutedCache.Get(key);
+                    await _connectionManager.BroadcastBinaryAsync(bytes, new SocketObject { Key = key });
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+            
             return Ok();
         }
     }
