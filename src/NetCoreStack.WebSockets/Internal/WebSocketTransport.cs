@@ -3,7 +3,7 @@ using System.Net.WebSockets;
 
 namespace NetCoreStack.WebSockets.Internal
 {
-    public class WebSocketTransport
+    public class WebSocketTransport : IDisposable
     {
         public WebSocket WebSocket { get; }
         public string ConnectionId { get; }
@@ -12,6 +12,11 @@ namespace NetCoreStack.WebSockets.Internal
         {
             ConnectionId = Guid.NewGuid().ToString();
             WebSocket = webSocket;
+        }
+
+        public void Dispose()
+        {
+            WebSocket.Dispose();
         }
     }
 }

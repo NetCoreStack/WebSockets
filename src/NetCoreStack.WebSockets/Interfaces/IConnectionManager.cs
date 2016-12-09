@@ -1,7 +1,7 @@
 ﻿using System.Net.WebSockets;
 using System.Threading.Tasks;
 
-namespace NetCoreStack.WebSockets.Internal
+namespace NetCoreStack.WebSockets
 {
     public interface IConnectionManager
     {

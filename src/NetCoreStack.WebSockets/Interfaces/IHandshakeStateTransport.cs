@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace NetCoreStack.WebSockets.Common
+namespace NetCoreStack.WebSockets
 {
     public interface IHandshakeStateTransport
     {

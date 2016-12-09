@@ -1,9 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using NetCoreStack.WebSockets.Internal;
 
 namespace NetCoreStack.WebSockets.ProxyClient
 {
-    public interface IClientWebSocketCommandInvocator
+    public interface IClientWebSocketCommandInvocator : IWebSocketCommandInvocator
     {
-        Task InvokeAsync(WebSocketMessageContext context);
     }
 }

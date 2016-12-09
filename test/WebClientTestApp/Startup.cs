@@ -36,7 +36,9 @@ namespace WebClientTestApp
             });
 
             // WebSockets for Browsers - User Agent ( javascript clients )
-            services.AddNativeWebSockets();
+            services.AddNativeWebSockets(options => {
+                options.RegisterInvocator<AgentsWebSocketCommandInvocator>(WebSocketCommands.All);
+            });
 
             // Add framework services.
             services.AddMvc(options => {

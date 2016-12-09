@@ -1,35 +1,33 @@
-﻿using Microsoft.Extensions.Options;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NetCoreStack.WebSockets.ProxyClient
+namespace NetCoreStack.WebSockets.Internal
 {
     public class InvocatorRegistry
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ConnectorOptions _options;
-        public IList<IClientWebSocketCommandInvocator> Invocators { get; }
+        public IList<IWebSocketCommandInvocator> Invocators { get; }
 
-        public InvocatorRegistry(IOptions<ConnectorOptions> options, IServiceProvider serviceProvider)
+        public InvocatorRegistry(IServiceProvider serviceProvider)
         {
-            _options = options.Value;
             _serviceProvider = serviceProvider;
         }
 
-        public List<IClientWebSocketCommandInvocator> GetInvocators(WebSocketMessageContext context)
+        public List<IWebSocketCommandInvocator> GetInvocators<TOptions>(WebSocketMessageContext context, TOptions options) 
+            where TOptions : SocketsOptions
         {
-            List<IClientWebSocketCommandInvocator> invocators = new List<IClientWebSocketCommandInvocator>();
+            List<IWebSocketCommandInvocator> invocators = new List<IWebSocketCommandInvocator>();
             if (context != null)
             {
                 var commands = context.Command.GetUniqueFlags().OfType<WebSocketCommands>().ToList();
                 foreach (var value in commands)
                 {
                     Type type;
-                    if (_options._map.TryGetValue(value, out type))
+                    if (options.Map.TryGetValue(value, out type))
                     {
                         var service = _serviceProvider.GetService(type);
-                        var invocator = service as IClientWebSocketCommandInvocator;
+                        var invocator = service as IWebSocketCommandInvocator;
 
                         if (invocator != null && !invocators.Contains(invocator))
                         {

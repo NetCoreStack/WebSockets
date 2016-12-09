@@ -1,5 +1,4 @@
 ﻿using NetCoreStack.WebSockets;
-using NetCoreStack.WebSockets.Internal;
 using NetCoreStack.WebSockets.ProxyClient;
 using System.Net.WebSockets;
 using System.Threading.Tasks;

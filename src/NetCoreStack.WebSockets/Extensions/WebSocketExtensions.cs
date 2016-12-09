@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using NetCoreStack.WebSockets.Internal;
+using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Net.WebSockets;
@@ -16,7 +17,19 @@ namespace NetCoreStack.WebSockets
             }
             
             var content = Encoding.UTF8.GetString(values, 0, result.Count);
-            var webSocketContext = JsonConvert.DeserializeObject<WebSocketMessageContext>(content);
+            WebSocketMessageContext webSocketContext = new WebSocketMessageContext();
+            try
+            {
+                webSocketContext = JsonConvert.DeserializeObject<WebSocketMessageContext>(content);
+            }
+            catch (Exception)
+            {
+                webSocketContext.Command = WebSocketCommands.DataSend;
+                webSocketContext.Value = content;
+                webSocketContext.MessageType = result.MessageType;
+            }
+            
+            webSocketContext.Length = result.Count;
             return webSocketContext;
         }
 
@@ -41,6 +54,7 @@ namespace NetCoreStack.WebSockets
                 webSocketContext.State = JsonConvert.DeserializeObject<SocketObject>(parts.Last());
             }
 
+            webSocketContext.Length = values.Length;
             webSocketContext.MessageType = WebSocketMessageType.Binary;
             webSocketContext.Command = WebSocketCommands.DataSend;
             return webSocketContext;

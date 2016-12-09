@@ -1,4 +1,4 @@
-﻿namespace NetCoreStack.WebSockets
+﻿namespace NetCoreStack.WebSockets.Internal
 {
     public class SocketsConstants
     {

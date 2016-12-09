@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using NetCoreStack.WebSockets.Internal;
 using System;
 using System.IO;
 using System.Linq;
@@ -12,68 +13,14 @@ namespace NetCoreStack.WebSockets.ProxyClient
     {
         private string _connectionId;
         private ClientWebSocket _webSocket;
-        private readonly ConnectorOptions _options;
+        private readonly ProxyOptions _options;
         private readonly InvocatorRegistry _invocatorRegistry;
 
-        public ClientWebSocketConnector(IOptions<ConnectorOptions> options, 
+        public ClientWebSocketConnector(IOptions<ProxyOptions> options, 
             InvocatorRegistry invocatorRegistry)
         {
             _options = options.Value;
             _invocatorRegistry = invocatorRegistry;
-        }
-
-        private async Task Receive()
-        {
-            var buffer = new byte[SocketsConstants.ChunkSize];
-            var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            while (!result.CloseStatus.HasValue)
-            {
-                if (result.MessageType == WebSocketMessageType.Text)
-                {
-                    var context = result.ToContext(buffer);
-                    if (context.Command == WebSocketCommands.Handshake)
-                        _connectionId = context.Value.ToString();
-
-                    var _invocators = _invocatorRegistry.GetInvocators(context);
-                    foreach (var invoker in _invocators)
-                    {
-                        await invoker.InvokeAsync(context);
-                    }
-                    result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                }
-
-                if (result.MessageType == WebSocketMessageType.Binary)
-                {
-                    byte[] binaryResult = null;
-                    using (var ms = new MemoryStream())
-                    {
-                        while (!result.EndOfMessage)
-                        {
-                            if (!result.CloseStatus.HasValue)
-                            {
-                                await ms.WriteAsync(buffer, 0, result.Count);
-                            }
-                            result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                        }
-                        if (result.EndOfMessage)
-                        {
-                            if (!result.CloseStatus.HasValue)
-                            {
-                                await ms.WriteAsync(buffer, 0, result.Count);
-                            }
-                        }
-                        binaryResult = ms.ToArray();
-                    }
-                    var context = result.ToBinaryContext(binaryResult);
-                    var _invocators = _invocatorRegistry.GetInvocators(context);
-                    foreach (var invoker in _invocators)
-                    {
-                        await invoker.InvokeAsync(context);
-                    }
-                    result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                }
-            }
-            await _webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
         }
 
         public async Task ConnectAsync()
@@ -84,7 +31,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 var uri = new Uri($"ws://{_options.WebSocketHostAddress}");
                 _webSocket = new ClientWebSocket();
                 await _webSocket.ConnectAsync(uri, CancellationToken.None);
-                await Receive();
+                await WebSocketReceiver.Receive(_webSocket, _invocatorRegistry, (SocketsOptions)_options);
             }
             catch (Exception ex)
             {

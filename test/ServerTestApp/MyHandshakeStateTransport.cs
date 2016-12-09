@@ -1,4 +1,4 @@
-﻿using NetCoreStack.WebSockets.Common;
+﻿using NetCoreStack.WebSockets;
 using System.Threading.Tasks;
 
 namespace ServerTestApp

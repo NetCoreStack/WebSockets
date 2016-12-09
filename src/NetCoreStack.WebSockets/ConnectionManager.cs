@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using NetCoreStack.WebSockets.Internal;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -9,16 +9,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NetCoreStack.WebSockets.Internal
+namespace NetCoreStack.WebSockets
 {
     public class ConnectionManager : IConnectionManager
     {
-        protected ILoggerFactory LoggerFactory { get; }
         protected ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
 
-        public ConnectionManager(ILoggerFactory loggerFactory)
+        public ConnectionManager()
         {
-            LoggerFactory = loggerFactory; 
             Connections = new ConcurrentDictionary<string, WebSocketTransport>();
         }
 
@@ -81,6 +79,11 @@ namespace NetCoreStack.WebSockets.Internal
                 throw new ArgumentNullException(nameof(context.Value));
             }
 
+            if (!Connections.Any())
+            {
+                return;
+            }
+
             var segments = context.ToSegment();
             var descriptor = new WebSocketMessageDescriptor
             {
@@ -97,6 +100,11 @@ namespace NetCoreStack.WebSockets.Internal
 
         public async Task BroadcastBinaryAsync(byte[] bytes, JsonObject properties)
         {
+            if (!Connections.Any())
+            {
+                return;
+            }
+
             PrepareBytes(ref bytes, properties);
 
             var buffer = new byte[SocketsConstants.ChunkSize];
@@ -128,6 +136,11 @@ namespace NetCoreStack.WebSockets.Internal
 
         public async Task SendAsync(string connectionId, WebSocketMessageContext context)
         {
+            if (!Connections.Any())
+            {
+                return;
+            }
+
             WebSocketTransport transport = null;
             if (!Connections.TryGetValue(connectionId, out transport))
             {
@@ -147,6 +160,11 @@ namespace NetCoreStack.WebSockets.Internal
 
         public async Task SendBinaryAsync(string connectionId, byte[] bytes, JsonObject properties)
         {
+            if (!Connections.Any())
+            {
+                return;
+            }
+
             WebSocketTransport transport = null;
             if (!Connections.TryGetValue(connectionId, out transport))
             {
@@ -214,8 +232,13 @@ namespace NetCoreStack.WebSockets.Internal
             WebSocketTransport transport = null;
             if (Connections.TryRemove(connectionId, out transport))
             {
-                transport.WebSocket.Dispose();
+                transport.Dispose();
             }
+        }
+
+        public void OnConnect(string connectionId, WebSocketMessageContext handshakeContext)
+        {
+            
         }
     }
 }

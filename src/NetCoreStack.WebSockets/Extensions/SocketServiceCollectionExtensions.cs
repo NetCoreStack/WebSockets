@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using NetCoreStack.WebSockets.Common;
 using NetCoreStack.WebSockets.Internal;
 using System;
 
@@ -8,7 +7,7 @@ namespace NetCoreStack.WebSockets
 {
     public static class SocketServiceCollectionExtensions
     {
-        public static void AddNativeWebSockets(this IServiceCollection services)
+        public static void AddNativeWebSockets(this IServiceCollection services, Action<ServerSocketsOptions> setup)
         {
             if (services == null)
             {
@@ -17,6 +16,7 @@ namespace NetCoreStack.WebSockets
 
             services.TryAdd(ServiceDescriptor.Transient<IHandshakeStateTransport, DefaultHandshakeStateTransport>());
             services.AddSingleton<IConnectionManager, ConnectionManager>();
+            InvocatorRegistryHelper.Register(services, setup);
         }
     }
 }

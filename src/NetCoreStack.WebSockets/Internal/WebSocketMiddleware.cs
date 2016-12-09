@@ -1,29 +1,28 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using NetCoreStack.WebSockets.Common;
+using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets.Internal
 {
     public class WebSocketMiddleware
     {
-        private readonly IHandshakeStateTransport _initState;
         private readonly RequestDelegate _next;
 
-        public WebSocketMiddleware(RequestDelegate next, IHandshakeStateTransport initState)
+        public WebSocketMiddleware(RequestDelegate next)
         {
             _next = next;
-            _initState = initState;
         }
 
         public async Task Invoke(HttpContext httpContext, 
-            IConnectionManager manager, 
-            ILoggerFactory loggerFactory)
+            IConnectionManager manager,
+            InvocatorRegistry invocatorRegistry,
+            IOptions<ServerSocketsOptions> options,
+            IHandshakeStateTransport initState)
         {
             if (httpContext.WebSockets.IsWebSocketRequest)
             {
                 var webSocket = await httpContext.WebSockets.AcceptWebSocketAsync();
-                await manager.Handshake(webSocket, _initState);
+                await manager.Handshake(webSocket, invocatorRegistry, options.Value, initState);
             }
             else
             {
