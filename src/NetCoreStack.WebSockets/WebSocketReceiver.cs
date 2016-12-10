@@ -1,4 +1,5 @@
-﻿using NetCoreStack.WebSockets.Internal;
+﻿using NetCoreStack.WebSockets.Interfaces;
+using NetCoreStack.WebSockets.Internal;
 using System;
 using System.IO;
 using System.Net.WebSockets;
@@ -9,7 +10,10 @@ namespace NetCoreStack.WebSockets
 {
     public static class WebSocketReceiver
     {
-        public static async Task Receive<TOptions>(WebSocket webSocket, InvocatorRegistry invocatorRegistry, TOptions options) 
+        public static async Task Receive<TOptions>(WebSocket webSocket, 
+            IStreamCompressor compressor,
+            InvocatorRegistry invocatorRegistry, 
+            TOptions options) 
             where TOptions : SocketsOptions, new()
         {
             var buffer = new byte[SocketsConstants.ChunkSize];
@@ -49,7 +53,7 @@ namespace NetCoreStack.WebSockets
                         }
                         binaryResult = ms.ToArray();
                     }
-                    var context = result.ToBinaryContext(binaryResult);
+                    var context = await result.ToBinaryContextAsync(compressor, binaryResult);
                     var _invocators = invocatorRegistry.GetInvocators(context, options);
                     foreach (var invoker in _invocators)
                     {

@@ -7,11 +7,11 @@ namespace NetCoreStack.WebSockets
     {
         Task BroadcastAsync(WebSocketMessageContext context);
 
-        Task BroadcastBinaryAsync(byte[] bytes, JsonObject properties);
+        Task BroadcastBinaryAsync(byte[] input, JsonObject properties);
 
         Task SendAsync(string connectionId, WebSocketMessageContext context);
 
-        Task SendBinaryAsync(string connectionId, byte[] bytes, JsonObject properties);
+        Task SendBinaryAsync(string connectionId, byte[] input, JsonObject properties);
 
         Task SendAsync(string connectionId, WebSocketMessageContext context, WebSocket webSocket);
 

@@ -1,4 +1,5 @@
-﻿using NetCoreStack.WebSockets;
+﻿using NetCoreStack.WebSockets.Interfaces;
+using System;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
 
@@ -7,7 +8,8 @@ namespace NetCoreStack.WebSockets.Internal
     internal static class ConnectionManagerExtensions
     {
         public static async Task Handshake(this IConnectionManager manager, 
-            WebSocket webSocket, 
+            WebSocket webSocket,
+            IStreamCompressor compressor,
             InvocatorRegistry invocatorRegistry,
             ServerSocketsOptions options,
             IHandshakeStateTransport initState)
@@ -20,11 +22,23 @@ namespace NetCoreStack.WebSockets.Internal
             context.State = await initState.GetStateAsync();            
 
             await manager.SendAsync(transport.ConnectionId, context, webSocket);
-            await WebSocketReceiver.Receive(webSocket, invocatorRegistry, (SocketsOptions)options);
-            if (webSocket.State == WebSocketState.Aborted || webSocket.State == WebSocketState.Closed)
+
+            try
             {
-                manager.CloseConnection(transport.ConnectionId);
+                await WebSocketReceiver.Receive(webSocket, compressor, invocatorRegistry, (SocketsOptions)options);
+                if (webSocket.State == WebSocketState.Aborted || webSocket.State == WebSocketState.Closed)
+                {
+                    manager.CloseConnection(transport.ConnectionId);
+                }
             }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                transport.Dispose();
+            }            
         }
     }
 }

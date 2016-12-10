@@ -1,9 +1,12 @@
-﻿using NetCoreStack.WebSockets.Internal;
+﻿using NetCoreStack.WebSockets.Interfaces;
+using NetCoreStack.WebSockets.Internal;
 using Newtonsoft.Json;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets
 {
@@ -33,30 +36,47 @@ namespace NetCoreStack.WebSockets
             return webSocketContext;
         }
 
-        public static WebSocketMessageContext ToBinaryContext(this WebSocketReceiveResult result, byte[] values)
+        public static async Task<WebSocketMessageContext> ToBinaryContextAsync(this WebSocketReceiveResult result,
+            IStreamCompressor compressor,
+            byte[] input)
         {
             if (result == null)
             {
                 throw new ArgumentNullException(nameof(result));
             }
             
-            var webSocketContext = new WebSocketMessageContext();
-            var content = Encoding.UTF8.GetString(values);
-            if (content != null)
+            var webSocketContext = new WebSocketMessageContext();            
+            var decompressedBytes = await compressor.DeCompressAsync(input);
+            using (var ms = new MemoryStream(decompressedBytes))
+            using (var sr = new StreamReader(ms))
             {
-                string[] parts = content.Split(new string[] { SocketsConstants.Splitter }, StringSplitOptions.None);
-                if (parts.Length != 2)
+                var content = await sr.ReadToEndAsync();
+                if (content != null)
                 {
-                    throw new InvalidOperationException(nameof(parts));
+                    string[] parts = content.Split(new string[] { SocketsConstants.Splitter }, StringSplitOptions.None);
+                    if (parts.Length != 2)
+                    {
+                        throw new InvalidOperationException($"Invalid binary data format! " +
+                            $"Check the splitter pattern exist: \"{SocketsConstants.Splitter}\"");
+                    }
+
+                    webSocketContext.Value = parts.Last();
+
+                    try
+                    {
+                        webSocketContext.State = JsonConvert.DeserializeObject<SocketObject>(parts.First());
+                    }
+                    catch (Exception)
+                    {
+                        webSocketContext.State = "Unknown";
+                    }
                 }
 
-                webSocketContext.Value = parts.First();
-                webSocketContext.State = JsonConvert.DeserializeObject<SocketObject>(parts.Last());
+                webSocketContext.Length = input.Length;
+                webSocketContext.MessageType = WebSocketMessageType.Binary;
+                webSocketContext.Command = WebSocketCommands.DataSend;
             }
 
-            webSocketContext.Length = values.Length;
-            webSocketContext.MessageType = WebSocketMessageType.Binary;
-            webSocketContext.Command = WebSocketCommands.DataSend;
             return webSocketContext;
         }
 

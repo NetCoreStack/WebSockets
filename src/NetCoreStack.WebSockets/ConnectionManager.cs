@@ -1,4 +1,5 @@
-﻿using NetCoreStack.WebSockets.Internal;
+﻿using NetCoreStack.WebSockets.Interfaces;
+using NetCoreStack.WebSockets.Internal;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -13,25 +14,39 @@ namespace NetCoreStack.WebSockets
 {
     public class ConnectionManager : IConnectionManager
     {
+        protected IStreamCompressor Compressor { get; }
         protected ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
 
-        public ConnectionManager()
+        public ConnectionManager(IStreamCompressor compressor)
         {
+            Compressor = compressor;
             Connections = new ConcurrentDictionary<string, WebSocketTransport>();
         }
 
-        private void PrepareBytes(ref byte[] bytes, JsonObject properties)
+        private async Task<byte[]> PrepareBytesAsync(byte[] input, JsonObject properties)
         {
-            if (bytes == null)
+            if (input == null)
             {
-                throw new ArgumentNullException(nameof(bytes));
+                throw new ArgumentNullException(nameof(input));
             }
 
             var props = JsonConvert.SerializeObject(properties);
-            var propsBytes = Encoding.UTF8.GetBytes($"{SocketsConstants.Splitter}{props}");
+            var propsBytes = Encoding.UTF8.GetBytes($"{props}{SocketsConstants.Splitter}");
 
-            var bytesCount = bytes.Length;
-            bytes = bytes.Concat(propsBytes).ToArray();
+            var bytesCount = input.Length;
+            input = propsBytes.Concat(input).ToArray();
+
+            return await Compressor.CompressAsync(input);
+
+            //if (input.Length > SocketsConstants.CompressorThreshold)
+            //{
+            //    using (MemoryStream ms = new MemoryStream(input))
+            //    {
+            //        return await Compressor.CompressAsync(ms);
+            //    }
+            //}
+            //else
+            //    return input;           
         }
 
         private async Task SendAsync(WebSocketTransport transport, WebSocketMessageDescriptor descriptor)
@@ -98,19 +113,19 @@ namespace NetCoreStack.WebSockets
             }
         }
 
-        public async Task BroadcastBinaryAsync(byte[] bytes, JsonObject properties)
+        public async Task BroadcastBinaryAsync(byte[] inputs, JsonObject properties)
         {
             if (!Connections.Any())
             {
                 return;
             }
-
-            PrepareBytes(ref bytes, properties);
-
+            
+            var bytes = await PrepareBytesAsync(inputs, properties);
             var buffer = new byte[SocketsConstants.ChunkSize];
+
             using (var ms = new MemoryStream(bytes))
             {
-                using (BinaryReader br = new BinaryReader(ms))
+                using (var br = new BinaryReader(ms))
                 {
                     byte[] chunkedBytes = null;
                     do
@@ -131,7 +146,7 @@ namespace NetCoreStack.WebSockets
 
                     } while (chunkedBytes.Length <= SocketsConstants.ChunkSize);
                 }
-            }            
+            }                  
         }
 
         public async Task SendAsync(string connectionId, WebSocketMessageContext context)
@@ -158,7 +173,7 @@ namespace NetCoreStack.WebSockets
             await SendAsync(transport, descriptor);
         }
 
-        public async Task SendBinaryAsync(string connectionId, byte[] bytes, JsonObject properties)
+        public async Task SendBinaryAsync(string connectionId, byte[] input, JsonObject properties)
         {
             if (!Connections.Any())
             {
@@ -171,7 +186,7 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentOutOfRangeException(nameof(transport));
             }
 
-            PrepareBytes(ref bytes, properties);
+            byte[] bytes = await PrepareBytesAsync(input, properties);
 
             var buffer = new byte[SocketsConstants.ChunkSize];
             using (var ms = new MemoryStream(bytes))
@@ -234,11 +249,6 @@ namespace NetCoreStack.WebSockets
             {
                 transport.Dispose();
             }
-        }
-
-        public void OnConnect(string connectionId, WebSocketMessageContext handshakeContext)
-        {
-            
         }
     }
 }

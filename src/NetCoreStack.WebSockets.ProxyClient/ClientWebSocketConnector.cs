@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using NetCoreStack.WebSockets.Interfaces;
 using NetCoreStack.WebSockets.Internal;
 using System;
-using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
@@ -14,13 +15,19 @@ namespace NetCoreStack.WebSockets.ProxyClient
         private string _connectionId;
         private ClientWebSocket _webSocket;
         private readonly ProxyOptions _options;
+        private readonly IStreamCompressor _compressor;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly InvocatorRegistry _invocatorRegistry;
 
         public ClientWebSocketConnector(IOptions<ProxyOptions> options, 
-            InvocatorRegistry invocatorRegistry)
+            IStreamCompressor compressor,
+            InvocatorRegistry invocatorRegistry,
+            ILoggerFactory loggerFactory)
         {
             _options = options.Value;
+            _compressor = compressor;
             _invocatorRegistry = invocatorRegistry;
+            _loggerFactory = loggerFactory;
         }
 
         public async Task ConnectAsync()
@@ -31,11 +38,15 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 var uri = new Uri($"ws://{_options.WebSocketHostAddress}");
                 _webSocket = new ClientWebSocket();
                 await _webSocket.ConnectAsync(uri, CancellationToken.None);
-                await WebSocketReceiver.Receive(_webSocket, _invocatorRegistry, (SocketsOptions)_options);
+                await WebSocketReceiver.Receive(_webSocket, _compressor, _invocatorRegistry, (SocketsOptions)_options);
             }
             catch (Exception ex)
             {
-                throw ex;
+                var logger = _loggerFactory.CreateLogger<ClientWebSocketConnector>();
+                logger.LogDebug(new EventId((int)WebSocketState.Aborted, nameof(WebSocketState.Aborted)),
+                    ex,
+                    "WebSocket connection end!",
+                    _options);
             }
             finally
             {

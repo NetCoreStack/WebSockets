@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using NetCoreStack.WebSockets.Interfaces;
 using NetCoreStack.WebSockets.Internal;
 using System;
 
@@ -14,6 +15,7 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentNullException(nameof(services));
             }
 
+            services.TryAdd(ServiceDescriptor.Singleton<IStreamCompressor, GZipStreamCompressor>());
             services.TryAdd(ServiceDescriptor.Transient<IHandshakeStateTransport, DefaultHandshakeStateTransport>());
             services.AddSingleton<IConnectionManager, ConnectionManager>();
             InvocatorRegistryHelper.Register(services, setup);
