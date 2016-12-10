@@ -1,4 +1,6 @@
-﻿using NetCoreStack.WebSockets.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using NetCoreStack.WebSockets.Interfaces;
 using NetCoreStack.WebSockets.Internal;
 using Newtonsoft.Json;
 using System;
@@ -14,13 +16,25 @@ namespace NetCoreStack.WebSockets
 {
     public class ConnectionManager : IConnectionManager
     {
-        protected IStreamCompressor Compressor { get; }
-        protected ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
+        private readonly InvocatorRegistry _invocatorRegistry;
+        private readonly ServerSocketsOptions _options;
+        private readonly IHandshakeStateTransport _initState;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly IStreamCompressor _compressor;
+        private readonly ConcurrentDictionary<string, WebSocketTransport> _connections;
 
-        public ConnectionManager(IStreamCompressor compressor)
+        public ConnectionManager(IStreamCompressor compressor,
+            InvocatorRegistry invocatorRegistry,
+            IOptions<ServerSocketsOptions> options,
+            IHandshakeStateTransport initState,
+            ILoggerFactory loggerFactory)
         {
-            Compressor = compressor;
-            Connections = new ConcurrentDictionary<string, WebSocketTransport>();
+            _invocatorRegistry = invocatorRegistry;
+            _options = options.Value;
+            _initState = initState;
+            _loggerFactory = loggerFactory;
+            _compressor = compressor;
+            _connections = new ConcurrentDictionary<string, WebSocketTransport>();
         }
 
         private async Task<byte[]> PrepareBytesAsync(byte[] input, JsonObject properties)
@@ -36,17 +50,7 @@ namespace NetCoreStack.WebSockets
             var bytesCount = input.Length;
             input = propsBytes.Concat(input).ToArray();
 
-            return await Compressor.CompressAsync(input);
-
-            //if (input.Length > SocketsConstants.CompressorThreshold)
-            //{
-            //    using (MemoryStream ms = new MemoryStream(input))
-            //    {
-            //        return await Compressor.CompressAsync(ms);
-            //    }
-            //}
-            //else
-            //    return input;           
+            return await _compressor.CompressAsync(input);         
         }
 
         private async Task SendAsync(WebSocketTransport transport, WebSocketMessageDescriptor descriptor)
@@ -82,6 +86,31 @@ namespace NetCoreStack.WebSockets
                            token);
         }
 
+        public async Task ConnectAsync(WebSocket webSocket)
+        {
+            WebSocketTransport transport = new WebSocketTransport(webSocket);
+            var connectionId = transport.ConnectionId;
+            var context = new WebSocketMessageContext();
+            context.Command = WebSocketCommands.Handshake;
+            context.Value = connectionId;
+            context.State = await _initState.GetStateAsync();
+            _connections.TryAdd(connectionId, transport);
+
+            await SendAsync(connectionId, context);
+
+            var receiverContext = new WebSocketReceiverContext
+            {
+                Compressor = _compressor,
+                ConnectionId = connectionId,
+                InvocatorRegistry = _invocatorRegistry,
+                LoggerFactory = _loggerFactory,
+                Options = _options,
+                WebSocket = webSocket
+            };
+            var receiver = new WebSocketReceiver(receiverContext, CloseConnection);
+            await receiver.ReceiveAsync();
+        }
+
         public async Task BroadcastAsync(WebSocketMessageContext context)
         {
             if (context == null)
@@ -94,7 +123,7 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentNullException(nameof(context.Value));
             }
 
-            if (!Connections.Any())
+            if (!_connections.Any())
             {
                 return;
             }
@@ -107,7 +136,7 @@ namespace NetCoreStack.WebSockets
                 MessageType = WebSocketMessageType.Text
             };
 
-            foreach (var connection in Connections)
+            foreach (var connection in _connections)
             {
                 await SendAsync(connection.Value, descriptor);
             }
@@ -115,7 +144,7 @@ namespace NetCoreStack.WebSockets
 
         public async Task BroadcastBinaryAsync(byte[] inputs, JsonObject properties)
         {
-            if (!Connections.Any())
+            if (!_connections.Any())
             {
                 return;
             }
@@ -136,7 +165,7 @@ namespace NetCoreStack.WebSockets
                         if (chunkedBytes.Length < SocketsConstants.ChunkSize)
                             endOfMessage = true;
 
-                        foreach (var connection in Connections)
+                        foreach (var connection in _connections)
                         {
                             await SendBinaryAsync(connection.Value, chunkedBytes, endOfMessage, CancellationToken.None);
                         }
@@ -151,13 +180,13 @@ namespace NetCoreStack.WebSockets
 
         public async Task SendAsync(string connectionId, WebSocketMessageContext context)
         {
-            if (!Connections.Any())
+            if (!_connections.Any())
             {
                 return;
             }
 
             WebSocketTransport transport = null;
-            if (!Connections.TryGetValue(connectionId, out transport))
+            if (!_connections.TryGetValue(connectionId, out transport))
             {
                 throw new ArgumentOutOfRangeException(nameof(transport));
             }
@@ -175,13 +204,13 @@ namespace NetCoreStack.WebSockets
 
         public async Task SendBinaryAsync(string connectionId, byte[] input, JsonObject properties)
         {
-            if (!Connections.Any())
+            if (!_connections.Any())
             {
                 return;
             }
 
             WebSocketTransport transport = null;
-            if (!Connections.TryGetValue(connectionId, out transport))
+            if (!_connections.TryGetValue(connectionId, out transport))
             {
                 throw new ArgumentOutOfRangeException(nameof(transport));
             }
@@ -216,39 +245,18 @@ namespace NetCoreStack.WebSockets
             }
         }
 
-        public async Task SendAsync(string connectionId, WebSocketMessageContext context, WebSocket webSocket)
-        {
-            if (string.IsNullOrEmpty(connectionId))
-            {
-                throw new ArgumentNullException(nameof(connectionId));
-            }
-
-            if (context == null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
-
-            if (webSocket == null)
-            {
-                throw new ArgumentNullException(nameof(webSocket));
-            }
-
-            WebSocketTransport transport = null;
-            if (!Connections.TryGetValue(connectionId, out transport))
-            {
-                Connections.TryAdd(connectionId, new WebSocketTransport(webSocket));
-            }
-
-            await SendAsync(connectionId, context);
-        }
-
         public void CloseConnection(string connectionId)
         {
             WebSocketTransport transport = null;
-            if (Connections.TryRemove(connectionId, out transport))
+            if (_connections.TryRemove(connectionId, out transport))
             {
                 transport.Dispose();
             }
+        }
+
+        public void CloseConnection(WebSocketReceiverContext context)
+        {
+            CloseConnection(context.ConnectionId);
         }
     }
 }

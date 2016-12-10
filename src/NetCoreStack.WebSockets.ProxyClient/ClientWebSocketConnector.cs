@@ -38,7 +38,16 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 var uri = new Uri($"ws://{_options.WebSocketHostAddress}");
                 _webSocket = new ClientWebSocket();
                 await _webSocket.ConnectAsync(uri, CancellationToken.None);
-                await WebSocketReceiver.Receive(_webSocket, _compressor, _invocatorRegistry, (SocketsOptions)_options);
+                var receiverContext = new WebSocketReceiverContext
+                {
+                    Compressor = _compressor,
+                    InvocatorRegistry = _invocatorRegistry,
+                    LoggerFactory = _loggerFactory,
+                    Options = _options,
+                    WebSocket = _webSocket
+                };
+                var receiver = new WebSocketReceiver(receiverContext, Close);
+                await receiver.ReceiveAsync();
             }
             catch (Exception ex)
             {
@@ -68,9 +77,18 @@ namespace NetCoreStack.WebSockets.ProxyClient
             await _webSocket.SendAsync(segments, WebSocketMessageType.Binary, true, CancellationToken.None);
         }
 
+        internal void Close(WebSocketReceiverContext context)
+        {
+            context.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, 
+                nameof(WebSocketReceiverContext), 
+                CancellationToken.None);
+        }
+
         internal void Close(string statusDescription)
         {
-            _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, statusDescription, CancellationToken.None);
+            _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, 
+                statusDescription, 
+                CancellationToken.None);
         }
     }
 }

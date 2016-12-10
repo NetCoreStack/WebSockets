@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NetCoreStack.WebSockets.Interfaces;
+using System;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets.Internal
@@ -19,12 +22,12 @@ namespace NetCoreStack.WebSockets.Internal
             IStreamCompressor compressor,
             InvocatorRegistry invocatorRegistry,
             IOptions<ServerSocketsOptions> options,
-            IHandshakeStateTransport initState)
+            ILoggerFactory loggerFactory)
         {
             if (httpContext.WebSockets.IsWebSocketRequest)
             {
                 var webSocket = await httpContext.WebSockets.AcceptWebSocketAsync();
-                await manager.Handshake(webSocket, compressor, invocatorRegistry, options.Value, initState);
+                await manager.ConnectAsync(webSocket);
             }
             else
             {

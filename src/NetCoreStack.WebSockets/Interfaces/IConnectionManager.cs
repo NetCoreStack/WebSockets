@@ -5,6 +5,8 @@ namespace NetCoreStack.WebSockets
 {
     public interface IConnectionManager
     {
+        Task ConnectAsync(WebSocket webSocket);
+
         Task BroadcastAsync(WebSocketMessageContext context);
 
         Task BroadcastBinaryAsync(byte[] input, JsonObject properties);
@@ -12,8 +14,6 @@ namespace NetCoreStack.WebSockets
         Task SendAsync(string connectionId, WebSocketMessageContext context);
 
         Task SendBinaryAsync(string connectionId, byte[] input, JsonObject properties);
-
-        Task SendAsync(string connectionId, WebSocketMessageContext context, WebSocket webSocket);
 
         void CloseConnection(string connectionId);
     }
