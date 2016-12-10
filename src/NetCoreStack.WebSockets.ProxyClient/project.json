@@ -2,7 +2,6 @@
   "version": "1.0.0-*",
 
   "dependencies": {
-    "System.Net.WebSockets.Client": "4.3.0",
     "NETStandard.Library": "1.6.1",
     "Microsoft.AspNetCore.Hosting.Abstractions": "1.1.0",
     "Microsoft.Extensions.Logging.Abstractions": "1.1.0",
@@ -10,7 +9,11 @@
   },
 
   "frameworks": {
+    "net451": {},
     "netstandard1.3": {
+      "dependencies": {
+        "System.Net.WebSockets.Client": "4.3.0"
+      },
       "imports": "dnxcore50"
     }
   }
