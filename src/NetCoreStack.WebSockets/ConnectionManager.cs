@@ -21,7 +21,7 @@ namespace NetCoreStack.WebSockets
         private readonly IHandshakeStateTransport _initState;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IStreamCompressor _compressor;
-        private readonly ConcurrentDictionary<string, WebSocketTransport> _connections;
+        public ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
 
         public ConnectionManager(IStreamCompressor compressor,
             InvocatorRegistry invocatorRegistry,
@@ -34,7 +34,7 @@ namespace NetCoreStack.WebSockets
             _initState = initState;
             _loggerFactory = loggerFactory;
             _compressor = compressor;
-            _connections = new ConcurrentDictionary<string, WebSocketTransport>();
+            Connections = new ConcurrentDictionary<string, WebSocketTransport>();
         }
 
         private async Task<byte[]> PrepareBytesAsync(byte[] input, JsonObject properties)
@@ -94,7 +94,7 @@ namespace NetCoreStack.WebSockets
             context.Command = WebSocketCommands.Handshake;
             context.Value = connectionId;
             context.State = await _initState.GetStateAsync();
-            _connections.TryAdd(connectionId, transport);
+            Connections.TryAdd(connectionId, transport);
 
             await SendAsync(connectionId, context);
 
@@ -123,7 +123,7 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentNullException(nameof(context.Value));
             }
 
-            if (!_connections.Any())
+            if (!Connections.Any())
             {
                 return;
             }
@@ -136,7 +136,7 @@ namespace NetCoreStack.WebSockets
                 MessageType = WebSocketMessageType.Text
             };
 
-            foreach (var connection in _connections)
+            foreach (var connection in Connections)
             {
                 await SendAsync(connection.Value, descriptor);
             }
@@ -144,7 +144,7 @@ namespace NetCoreStack.WebSockets
 
         public async Task BroadcastBinaryAsync(byte[] inputs, JsonObject properties)
         {
-            if (!_connections.Any())
+            if (!Connections.Any())
             {
                 return;
             }
@@ -165,9 +165,10 @@ namespace NetCoreStack.WebSockets
                         if (chunkedBytes.Length < SocketsConstants.ChunkSize)
                             endOfMessage = true;
 
-                        foreach (var connection in _connections)
+                        foreach (var connection in Connections)
                         {
                             await SendBinaryAsync(connection.Value, chunkedBytes, endOfMessage, CancellationToken.None);
+                            await Task.Delay(250);
                         }
 
                         if (endOfMessage)
@@ -180,13 +181,13 @@ namespace NetCoreStack.WebSockets
 
         public async Task SendAsync(string connectionId, WebSocketMessageContext context)
         {
-            if (!_connections.Any())
+            if (!Connections.Any())
             {
                 return;
             }
 
             WebSocketTransport transport = null;
-            if (!_connections.TryGetValue(connectionId, out transport))
+            if (!Connections.TryGetValue(connectionId, out transport))
             {
                 throw new ArgumentOutOfRangeException(nameof(transport));
             }
@@ -204,13 +205,13 @@ namespace NetCoreStack.WebSockets
 
         public async Task SendBinaryAsync(string connectionId, byte[] input, JsonObject properties)
         {
-            if (!_connections.Any())
+            if (!Connections.Any())
             {
                 return;
             }
 
             WebSocketTransport transport = null;
-            if (!_connections.TryGetValue(connectionId, out transport))
+            if (!Connections.TryGetValue(connectionId, out transport))
             {
                 throw new ArgumentOutOfRangeException(nameof(transport));
             }
@@ -248,7 +249,7 @@ namespace NetCoreStack.WebSockets
         public void CloseConnection(string connectionId)
         {
             WebSocketTransport transport = null;
-            if (_connections.TryRemove(connectionId, out transport))
+            if (Connections.TryRemove(connectionId, out transport))
             {
                 transport.Dispose();
             }

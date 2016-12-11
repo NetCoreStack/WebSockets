@@ -1,10 +1,14 @@
-﻿using System.Net.WebSockets;
+﻿using NetCoreStack.WebSockets.Internal;
+using System.Collections.Concurrent;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets
 {
     public interface IConnectionManager
     {
+        ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
+
         Task ConnectAsync(WebSocket webSocket);
 
         Task BroadcastAsync(WebSocketMessageContext context);
