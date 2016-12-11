@@ -168,7 +168,6 @@ namespace NetCoreStack.WebSockets
                         foreach (var connection in Connections)
                         {
                             await SendBinaryAsync(connection.Value, chunkedBytes, endOfMessage, CancellationToken.None);
-                            await Task.Delay(250);
                         }
 
                         if (endOfMessage)
