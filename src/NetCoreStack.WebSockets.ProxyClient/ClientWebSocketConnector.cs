@@ -14,28 +14,29 @@ namespace NetCoreStack.WebSockets.ProxyClient
     {
         private string _connectionId;
         private ClientWebSocket _webSocket;
-        private readonly ProxyOptions _options;
         private readonly IStreamCompressor _compressor;
         private readonly ILoggerFactory _loggerFactory;
         private readonly InvocatorRegistry _invocatorRegistry;
+
+        public ProxyOptions Options { get; }
 
         public ClientWebSocketConnector(IOptions<ProxyOptions> options, 
             IStreamCompressor compressor,
             InvocatorRegistry invocatorRegistry,
             ILoggerFactory loggerFactory)
         {
-            _options = options.Value;
             _compressor = compressor;
             _invocatorRegistry = invocatorRegistry;
             _loggerFactory = loggerFactory;
+            Options = options.Value;
         }
 
         public async Task ConnectAsync()
         {
             try
             {
-                var name = _options.ConnectorName;
-                var uri = new Uri($"ws://{_options.WebSocketHostAddress}");
+                var name = Options.ConnectorName;
+                var uri = new Uri($"ws://{Options.WebSocketHostAddress}");
                 _webSocket = new ClientWebSocket();
                 await _webSocket.ConnectAsync(uri, CancellationToken.None);
                 var receiverContext = new WebSocketReceiverContext
@@ -43,7 +44,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
                     Compressor = _compressor,
                     InvocatorRegistry = _invocatorRegistry,
                     LoggerFactory = _loggerFactory,
-                    Options = _options,
+                    Options = Options,
                     WebSocket = _webSocket
                 };
                 var receiver = new WebSocketReceiver(receiverContext, Close);
@@ -55,7 +56,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 logger.LogDebug(new EventId((int)WebSocketState.Aborted, nameof(WebSocketState.Aborted)),
                     ex,
                     "WebSocket connection end!",
-                    _options);
+                    Options);
             }
             finally
             {
