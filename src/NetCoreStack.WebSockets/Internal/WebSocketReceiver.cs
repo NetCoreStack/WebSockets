@@ -90,7 +90,8 @@ namespace NetCoreStack.WebSockets.Internal
             }
             finally
             {
-                if (_context.WebSocket.State == WebSocketState.Aborted ||
+                if (_context.WebSocket.State == WebSocketState.Open ||
+                    _context.WebSocket.State == WebSocketState.Aborted ||
                     _context.WebSocket.State == WebSocketState.Closed)
                 {
                     _closeCallback?.Invoke(_context);
