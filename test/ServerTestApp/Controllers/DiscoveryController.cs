@@ -107,10 +107,10 @@ namespace ServerTestApp.Controllers
                 try
                 {
                     var routeValueDictionary = new RouteValueDictionary(new { Key = key });
-                    var bytes = _distrubutedCache.Get(key);
-                    var compressor = HttpContext.RequestServices.GetService<ICompressor>();
-                    var compressedBytes = await compressor.CompressAsync(bytes);
-                    await _connectionManager.BroadcastBinaryAsync(compressedBytes, routeValueDictionary, false);
+
+                    // Get compressed bytes from redis
+                    var compressedBytes = _distrubutedCache.Get(key);
+                    await _connectionManager.BroadcastBinaryAsync(compressedBytes, routeValueDictionary);
                 }
                 catch (Exception ex)
                 {

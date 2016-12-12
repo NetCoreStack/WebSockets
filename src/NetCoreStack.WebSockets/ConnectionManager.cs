@@ -39,7 +39,7 @@ namespace NetCoreStack.WebSockets
             Connections = new ConcurrentDictionary<string, WebSocketTransport>();
         }
 
-        private async Task<byte[]> PrepareBytesAsync(byte[] input, IDictionary<string, object> properties, bool compression = true)
+        private async Task<byte[]> PrepareBytesAsync(byte[] input, IDictionary<string, object> properties)
         {
             if (input == null)
             {
@@ -49,19 +49,23 @@ namespace NetCoreStack.WebSockets
             if (properties == null)
                 properties = new Dictionary<string, object>();
 
-            object compressedKey = null;
-            if (properties.TryGetValue(CompressedKey, out compressedKey))
-                properties[CompressedKey] = compression;
+            bool compressed = GZipHelper.IsGZipHeader(input);
+
+            object key = null;
+            if (properties.TryGetValue(CompressedKey, out key))
+                properties[CompressedKey] = compressed;
             else
-                properties.Add(CompressedKey, compression);
+                properties.Add(CompressedKey, compressed);
 
-            var props = JsonConvert.SerializeObject(properties);
-            var propsBytes = Encoding.UTF8.GetBytes($"{props}{Splitter}");
+            string props = JsonConvert.SerializeObject(properties);
+            byte[] header = Encoding.UTF8.GetBytes($"{props}{Splitter}");
 
-            var bytesCount = input.Length;
-            input = propsBytes.Concat(input).ToArray();
+            if (compressed)
+                header = await _compressor.CompressAsync(header);
 
-            if (compression)
+            input = header.Concat(input).ToArray();
+
+            if (!compressed)
                 return await _compressor.CompressAsync(input);
 
             return input;
@@ -156,14 +160,14 @@ namespace NetCoreStack.WebSockets
             }
         }
 
-        public async Task BroadcastBinaryAsync(byte[] inputs, IDictionary<string, object> properties, bool compression = true)
+        public async Task BroadcastBinaryAsync(byte[] inputs, IDictionary<string, object> properties)
         {
             if (!Connections.Any())
             {
                 return;
             }
             
-            var bytes = await PrepareBytesAsync(inputs, properties, compression);
+            var bytes = await PrepareBytesAsync(inputs, properties);
 
             using (var ms = new MemoryStream(bytes))
             {
@@ -215,7 +219,7 @@ namespace NetCoreStack.WebSockets
             await SendAsync(transport, descriptor);
         }
 
-        public async Task SendBinaryAsync(string connectionId, byte[] input, IDictionary<string, object> properties, bool compression = true)
+        public async Task SendBinaryAsync(string connectionId, byte[] input, IDictionary<string, object> properties)
         {
             if (!Connections.Any())
             {
@@ -228,7 +232,7 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentOutOfRangeException(nameof(transport));
             }
 
-            byte[] bytes = await PrepareBytesAsync(input, properties, compression);
+            byte[] bytes = await PrepareBytesAsync(input, properties);
 
             using (var ms = new MemoryStream(bytes))
             {

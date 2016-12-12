@@ -24,9 +24,8 @@ namespace NetCoreStack.WebSockets
         /// </summary>
         /// <param name="inputs"></param>
         /// <param name="properties"></param>
-        /// <param name="compression"></param>
         /// <returns></returns>
-        Task BroadcastBinaryAsync(byte[] input, IDictionary<string, object> properties, bool compression = true);
+        Task BroadcastBinaryAsync(byte[] input, IDictionary<string, object> properties);
 
         /// <summary>
         /// Send text message to specified connection
@@ -44,7 +43,7 @@ namespace NetCoreStack.WebSockets
         /// <param name="properties">Additional transport data</param>
         /// <param name="compression">Compression status of the data, default value is true</param>
         /// <returns></returns>
-        Task SendBinaryAsync(string connectionId, byte[] input, IDictionary<string, object> properties, bool compression = true);
+        Task SendBinaryAsync(string connectionId, byte[] input, IDictionary<string, object> properties);
 
         /// <summary>
         /// Close the specified connection
