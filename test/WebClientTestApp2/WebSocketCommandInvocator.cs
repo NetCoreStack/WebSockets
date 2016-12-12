@@ -6,14 +6,14 @@ using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
 
-namespace WebClientTestApp
+namespace WebClientTestApp2
 {
-    public class CustomWebSocketCommandInvocator : IClientWebSocketCommandInvocator
+    public class WebSocketCommandInvocator : IClientWebSocketCommandInvocator
     {
         private readonly IConnectionManager _connectionManager;
         private readonly InMemoryCacheProvider _cacheProvider;
 
-        public CustomWebSocketCommandInvocator(IConnectionManager connectionManager, InMemoryCacheProvider cacheProvider)
+        public WebSocketCommandInvocator(IConnectionManager connectionManager, InMemoryCacheProvider cacheProvider)
         {
             _connectionManager = connectionManager;
             _cacheProvider = cacheProvider;
@@ -37,7 +37,7 @@ namespace WebClientTestApp
                 if (state != null)
                 {
                     object key = null;
-                    if (state.TryGetValue("Key", out key))
+                    if(state.TryGetValue("Key", out key))
                     {
                         await Task.Run(() => _cacheProvider.SetObject(key.ToString(),
                              context.Value,

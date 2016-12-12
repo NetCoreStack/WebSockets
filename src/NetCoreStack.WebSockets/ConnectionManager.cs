@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
@@ -39,17 +40,17 @@ namespace NetCoreStack.WebSockets
             Connections = new ConcurrentDictionary<string, WebSocketTransport>();
         }
 
-        private async Task<byte[]> PrepareBytesAsync(byte[] input, IDictionary<string, object> properties)
+        private async Task<byte[]> PrepareBytesAsync(byte[] body, IDictionary<string, object> properties)
         {
-            if (input == null)
+            if (body == null)
             {
-                throw new ArgumentNullException(nameof(input));
+                throw new ArgumentNullException(nameof(body));
             }
 
             if (properties == null)
                 properties = new Dictionary<string, object>();
 
-            bool compressed = GZipHelper.IsGZipHeader(input);
+            bool compressed = GZipHelper.IsGZipBody(body);
 
             object key = null;
             if (properties.TryGetValue(CompressedKey, out key))
@@ -58,17 +59,22 @@ namespace NetCoreStack.WebSockets
                 properties.Add(CompressedKey, compressed);
 
             string props = JsonConvert.SerializeObject(properties);
-            byte[] header = Encoding.UTF8.GetBytes($"{props}{Splitter}");
+            byte[] header = Encoding.UTF8.GetBytes($"{props}");
 
-            if (compressed)
-                header = await _compressor.CompressAsync(header);
-
-            input = header.Concat(input).ToArray();
+#if DEBUG
+            if (properties.TryGetValue("Key", out key))
+            {
+                int length = body.Length;
+                Debug.WriteLine($"=====Key: {key?.ToString()}=====Length: {length}=====");
+            }
+#endif
 
             if (!compressed)
-                return await _compressor.CompressAsync(input);
+                body = await _compressor.CompressAsync(body);
 
-            return input;
+            body = header.Concat(Splitter).Concat(body).ToArray();
+
+            return body;
         }
 
         private async Task SendAsync(WebSocketTransport transport, WebSocketMessageDescriptor descriptor)
@@ -111,7 +117,7 @@ namespace NetCoreStack.WebSockets
             var context = new WebSocketMessageContext();
             context.Command = WebSocketCommands.Handshake;
             context.Value = connectionId;
-            context.State = await _initState.GetStateAsync();
+            context.Header = await _initState.GetStateAsync();
             Connections.TryAdd(connectionId, transport);
 
             await SendAsync(connectionId, context);

@@ -11,7 +11,7 @@ namespace NetCoreStack.WebSockets
 
         public object Value { get; set; }
 
-        public IDictionary<string, object> State { get; set; }
+        public IDictionary<string, object> Header { get; set; }
 
         public int Length { get; set; }
 
@@ -30,7 +30,7 @@ namespace NetCoreStack.WebSockets
 
         public WebSocketMessageContext()
         {
-            State = new Dictionary<string, object>();
+            Header = new Dictionary<string, object>();
         }
     }
 }

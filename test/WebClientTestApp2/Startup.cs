@@ -9,7 +9,7 @@ using NetCoreStack.WebSockets.ProxyClient;
 using System;
 using System.IO;
 
-namespace WebClientTestApp
+namespace WebClientTestApp2
 {
     public class Startup
     {
@@ -20,12 +20,12 @@ namespace WebClientTestApp
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
-
             Configuration = builder.Build();
         }
 
         public IConfigurationRoot Configuration { get; }
 
+        // This method gets called by the runtime. Use this method to add services to the container.
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -36,7 +36,7 @@ namespace WebClientTestApp
             services.AddProxyWebSockets(options => {
                 options.ConnectorName = Environment.MachineName;
                 options.WebSocketHostAddress = "localhost:7803";
-                options.RegisterInvocator<CustomWebSocketCommandInvocator>(WebSocketCommands.All);
+                options.RegisterInvocator<WebSocketCommandInvocator>(WebSocketCommands.All);
             });
 
             // WebSockets for Browsers - User Agent ( javascript clients )
@@ -44,10 +44,7 @@ namespace WebClientTestApp
                 options.RegisterInvocator<AgentsWebSocketCommandInvocator>(WebSocketCommands.All);
             });
 
-            // Add framework services.
-            services.AddMvc(options => {
-                options.Filters.Add(new ClientExceptionFilterAttribute());
-            });
+            services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

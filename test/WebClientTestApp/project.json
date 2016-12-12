@@ -22,7 +22,8 @@
     "Microsoft.Extensions.Options.ConfigurationExtensions": "1.1.0",
     "Microsoft.Extensions.Configuration.CommandLine": "1.1.0",
     "NetCoreStack.WebSockets": "1.0.0-*",
-    "NetCoreStack.WebSockets.ProxyClient": "1.0.0-*"
+    "NetCoreStack.WebSockets.ProxyClient": "1.0.0-*",
+    "Common.Libs": "1.0.0-*"
   },
 
   "tools": {

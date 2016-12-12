@@ -5,7 +5,7 @@
         /// <summary>
         /// Checks the first two bytes in a GZIP file, which must be 31 and 139.
         /// </summary>
-        public static bool IsGZipHeader(byte[] arr)
+        public static bool IsGZipBody(byte[] arr)
         {
             return arr.Length >= 2 &&
                 arr[0] == 31 &&

@@ -46,51 +46,48 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentNullException(nameof(result));
             }
 
+            var content = input.Split();
+            byte[] header = content.Item1;
+            byte[] body = content.Item2;
+
             var webSocketContext = new WebSocketMessageContext();
-            bool compression = GZipHelper.IsGZipHeader(input);
-            byte[] bytes = null;
-            if (compression)
+            bool isCompressed = GZipHelper.IsGZipBody(body);
+            if (isCompressed)
             {
-                bytes = await compressor.DeCompressAsync(input);
-            }
-            else
-            {
-                bytes = input;
+                body = await compressor.DeCompressAsync(body);
             }
 
-            using (var ms = new MemoryStream(bytes))
+            using (var ms = new MemoryStream(header))
             using (var sr = new StreamReader(ms))
             {
-                var content = await sr.ReadToEndAsync();
-                if (content != null)
+                var data = await sr.ReadToEndAsync();
+                if (data != null)
                 {
-                    string[] parts = content.Split(new string[] { SocketsConstants.Splitter }, StringSplitOptions.None);
-                    if (parts.Length != 2)
-                    {
-                        throw new InvalidOperationException($"Invalid binary data format! " +
-                            $"Check the splitter pattern exist: \"{SocketsConstants.Splitter}\"");
-                    }
-
-                    webSocketContext.Value = parts.Last();
-
                     try
                     {
-                        webSocketContext.State = JsonConvert.DeserializeObject<Dictionary<string, object>>(parts.First());
+                        webSocketContext.Header = JsonConvert.DeserializeObject<Dictionary<string, object>>(data);
                     }
                     catch (Exception ex)
                     {
-                        webSocketContext.State = new Dictionary<string, object>
+                        webSocketContext.Header = new Dictionary<string, object>
                         {
                             ["Exception"] = ex.Message,
-                            ["Unknown"] = "Unknown binary message"
+                            ["Unknown"] = "Unknown binary message!"
                         };
                     }
                 }
-
-                webSocketContext.Length = input.Length;
-                webSocketContext.MessageType = WebSocketMessageType.Binary;
-                webSocketContext.Command = WebSocketCommands.DataSend;
             }
+
+            using (var ms = new MemoryStream(body))
+            using (var sr = new StreamReader(ms))
+            {
+                var data = await sr.ReadToEndAsync();
+                webSocketContext.Value = data;
+            }
+
+            webSocketContext.Length = input.Length;
+            webSocketContext.MessageType = WebSocketMessageType.Binary;
+            webSocketContext.Command = WebSocketCommands.DataSend;
 
             return webSocketContext;
         }
