@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using System.Collections.Generic;
+using System.Net.WebSockets;
 
 namespace NetCoreStack.WebSockets
 {
@@ -10,7 +11,7 @@ namespace NetCoreStack.WebSockets
 
         public object Value { get; set; }
 
-        public object State { get; set; }
+        public IDictionary<string, object> State { get; set; }
 
         public int Length { get; set; }
 
@@ -25,6 +26,11 @@ namespace NetCoreStack.WebSockets
 
                 return string.Empty;
             }
+        }
+
+        public WebSocketMessageContext()
+        {
+            State = new Dictionary<string, object>();
         }
     }
 }

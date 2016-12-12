@@ -2,6 +2,7 @@
 using NetCoreStack.WebSockets.Internal;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
@@ -44,10 +45,20 @@ namespace NetCoreStack.WebSockets
             {
                 throw new ArgumentNullException(nameof(result));
             }
-            
-            var webSocketContext = new WebSocketMessageContext();            
-            var decompressedBytes = await compressor.DeCompressAsync(input);
-            using (var ms = new MemoryStream(decompressedBytes))
+
+            var webSocketContext = new WebSocketMessageContext();
+            bool compression = GZipHelper.IsGZipHeader(input);
+            byte[] bytes = null;
+            if (compression)
+            {
+                bytes = await compressor.DeCompressAsync(input);
+            }
+            else
+            {
+                bytes = input;
+            }
+
+            using (var ms = new MemoryStream(bytes))
             using (var sr = new StreamReader(ms))
             {
                 var content = await sr.ReadToEndAsync();
@@ -64,11 +75,15 @@ namespace NetCoreStack.WebSockets
 
                     try
                     {
-                        webSocketContext.State = JsonConvert.DeserializeObject<SocketObject>(parts.First());
+                        webSocketContext.State = JsonConvert.DeserializeObject<Dictionary<string, object>>(parts.First());
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        webSocketContext.State = "Unknown";
+                        webSocketContext.State = new Dictionary<string, object>
+                        {
+                            ["Exception"] = ex.Message,
+                            ["Unknown"] = "Unknown binary message"
+                        };
                     }
                 }
 

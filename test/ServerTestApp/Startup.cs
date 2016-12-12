@@ -19,6 +19,7 @@ namespace ServerTestApp
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
+
             Configuration = builder.Build();
         }
 
@@ -47,6 +48,7 @@ namespace ServerTestApp
                 options.InstanceName = "RedisInstance";
             });
 
+            services.AddSingleton<ICompressor, DefaultCompressor>();
             services.AddTransient<IHandshakeStateTransport, MyHandshakeStateTransport>();
 
             // Add NetCoreStack Native Socket Services.

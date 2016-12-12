@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets
 {
     public interface IHandshakeStateTransport
     {
-        Task<object> GetStateAsync();
+        Task<IDictionary<string, object>> GetStateAsync();
     }
 }

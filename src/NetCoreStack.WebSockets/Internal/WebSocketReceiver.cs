@@ -61,11 +61,22 @@ namespace NetCoreStack.WebSockets.Internal
                         }
                         binaryResult = ms.ToArray();
                     }
-                    var context = await result.ToBinaryContextAsync(_context.Compressor, binaryResult);
-                    var _invocators = _context.InvocatorRegistry.GetInvocators(context, _context.Options);
-                    foreach (var invoker in _invocators)
+                    try
                     {
-                        await invoker.InvokeAsync(context);
+                        var context = await result.ToBinaryContextAsync(_context.Compressor, binaryResult);
+                        var _invocators = _context.InvocatorRegistry.GetInvocators(context, _context.Options);
+                        foreach (var invoker in _invocators)
+                        {
+                            await invoker.InvokeAsync(context);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        var logger = _context.LoggerFactory.CreateLogger<WebSocketReceiver>();
+                        logger.LogDebug(new EventId((int)WebSocketState.Aborted, 
+                            nameof(WebSocketState.Aborted)), 
+                            ex, "WebSocket transport exception!", 
+                            _context.Options);
                     }
                     result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 }

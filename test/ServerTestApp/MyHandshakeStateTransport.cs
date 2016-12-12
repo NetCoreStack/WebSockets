@@ -1,21 +1,15 @@
 ﻿using NetCoreStack.WebSockets;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ServerTestApp
 {
     public class MyHandshakeStateTransport : IHandshakeStateTransport
     {
-        public Task<object> GetStateAsync()
+        Task<IDictionary<string, object>> IHandshakeStateTransport.GetStateAsync()
         {
-            return Task.FromResult<object>(0);
-        }
-    }
-
-    public class CustomHandshakeStateTransport : IHandshakeStateTransport
-    {
-        public Task<object> GetStateAsync()
-        {
-            return Task.FromResult<object>(0);
+            var dictionary = new Dictionary<string, object>();
+            return Task.FromResult<IDictionary<string, object>>(dictionary);
         }
     }
 }

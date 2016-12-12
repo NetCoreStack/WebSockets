@@ -1,12 +1,15 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets
 {
     public class DefaultHandshakeStateTransport : IHandshakeStateTransport
     {
-        public Task<object> GetStateAsync()
+        public Task<IDictionary<string, object>> GetStateAsync()
         {
-            return Task.FromResult<object>(0);
+            var dictionary = new Dictionary<string, object>();
+            return Task.FromResult<IDictionary<string, object>>(dictionary);
         }
     }
 }

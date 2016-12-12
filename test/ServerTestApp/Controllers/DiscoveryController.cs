@@ -7,6 +7,8 @@ using ServerTestApp.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Routing;
 
 namespace ServerTestApp.Controllers
 {
@@ -49,9 +51,10 @@ namespace ServerTestApp.Controllers
         public async Task<IActionResult> BroadcastBinaryAsync([FromBody]SimpleModel model)
         {
             var bytes = _distrubutedCache.Get(model.Key);
+            var routeValueDictionary = new RouteValueDictionary(new { Key = model.Key });
             if (bytes != null)
             {
-                await _connectionManager.BroadcastBinaryAsync(bytes, new SocketObject { Key = model.Key });
+                await _connectionManager.BroadcastBinaryAsync(bytes, routeValueDictionary);
             }
             return Ok();
         }
@@ -73,8 +76,9 @@ namespace ServerTestApp.Controllers
             {
                 try
                 {
+                    var routeValueDictionary = new RouteValueDictionary(new { Key = key });
                     var bytes = _distrubutedCache.Get(key);
-                    await _connectionManager.BroadcastBinaryAsync(bytes, new SocketObject { Key = key });
+                    await _connectionManager.BroadcastBinaryAsync(bytes, routeValueDictionary);
                 }
                 catch (Exception ex)
                 {
@@ -82,6 +86,38 @@ namespace ServerTestApp.Controllers
                 }
             }
             
+            return Ok();
+        }
+
+        [HttpPost(nameof(SendCompressedBinaryAsync))]
+        public async Task<IActionResult> SendCompressedBinaryAsync([FromBody]Context model)
+        {
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
+
+            if (model.Keys == null || !model.Keys.Any())
+            {
+                return NotFound();
+            }
+
+            foreach (var key in model.Keys)
+            {
+                try
+                {
+                    var routeValueDictionary = new RouteValueDictionary(new { Key = key });
+                    var bytes = _distrubutedCache.Get(key);
+                    var compressor = HttpContext.RequestServices.GetService<ICompressor>();
+                    var compressedBytes = await compressor.CompressAsync(bytes);
+                    await _connectionManager.BroadcastBinaryAsync(compressedBytes, routeValueDictionary, false);
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+
             return Ok();
         }
     }

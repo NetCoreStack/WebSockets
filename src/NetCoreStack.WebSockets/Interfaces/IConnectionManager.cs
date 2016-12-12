@@ -1,5 +1,6 @@
 ﻿using NetCoreStack.WebSockets.Internal;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
 
@@ -11,14 +12,44 @@ namespace NetCoreStack.WebSockets
 
         Task ConnectAsync(WebSocket webSocket);
 
+        /// <summary>
+        /// Text message broadcaster
+        /// </summary>
+        /// <param name="context">Data</param>
+        /// <returns></returns>
         Task BroadcastAsync(WebSocketMessageContext context);
 
-        Task BroadcastBinaryAsync(byte[] input, JsonObject properties);
+        /// <summary>
+        /// Binary message broadcaster
+        /// </summary>
+        /// <param name="inputs"></param>
+        /// <param name="properties"></param>
+        /// <param name="compression"></param>
+        /// <returns></returns>
+        Task BroadcastBinaryAsync(byte[] input, IDictionary<string, object> properties, bool compression = true);
 
+        /// <summary>
+        /// Send text message to specified connection
+        /// </summary>
+        /// <param name="connectionId"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         Task SendAsync(string connectionId, WebSocketMessageContext context);
 
-        Task SendBinaryAsync(string connectionId, byte[] input, JsonObject properties);
+        /// <summary>
+        /// Send binary message to specified connection
+        /// </summary>
+        /// <param name="connectionId"></param>
+        /// <param name="input">Data</param>
+        /// <param name="properties">Additional transport data</param>
+        /// <param name="compression">Compression status of the data, default value is true</param>
+        /// <returns></returns>
+        Task SendBinaryAsync(string connectionId, byte[] input, IDictionary<string, object> properties, bool compression = true);
 
+        /// <summary>
+        /// Close the specified connection
+        /// </summary>
+        /// <param name="connectionId"></param>
         void CloseConnection(string connectionId);
     }
 }

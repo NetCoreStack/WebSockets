@@ -3,6 +3,7 @@
     public class SocketsConstants
     {
         public const string Splitter = "<|>";
+        public const string CompressedKey = "Compressed";
         public const int ChunkSize = 1024 * 4;
     }
 }
