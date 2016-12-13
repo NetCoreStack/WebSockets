@@ -23,8 +23,8 @@ namespace NetCoreStack.WebSockets.Internal
                 var commands = context.Command.GetUniqueFlags().OfType<WebSocketCommands>().ToList();
                 foreach (var value in commands)
                 {
-                    Type type;
-                    if (options.Map.TryGetValue(value, out type))
+                    List<Type> types = options.Map.Where(c => c.Command == value).Select(x => x.Invocator).ToList();
+                    foreach (var type in types)
                     {
                         var service = _serviceProvider.GetService(type);
                         var invocator = service as IWebSocketCommandInvocator;

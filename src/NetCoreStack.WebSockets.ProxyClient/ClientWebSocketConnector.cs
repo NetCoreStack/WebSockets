@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using NetCoreStack.WebSockets.Interfaces;
 using NetCoreStack.WebSockets.Internal;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
@@ -29,6 +30,19 @@ namespace NetCoreStack.WebSockets.ProxyClient
             _invocatorRegistry = invocatorRegistry;
             _loggerFactory = loggerFactory;
             Options = options.Value;
+        }
+
+        private WebSocketMessageContext CreateConnectionContext()
+        {
+            var context = new WebSocketMessageContext();
+            context.MessageType = WebSocketMessageType.Text;
+            context.Command = WebSocketCommands.Connect;
+            context.Header = new Dictionary<string, object>
+            {
+                ["Name"] = Options.ConnectorName
+            };
+
+            return context;
         }
 
         public async Task ConnectAsync()

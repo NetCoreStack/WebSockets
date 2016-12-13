@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NetCoreStack.WebSockets.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,13 +7,13 @@ namespace NetCoreStack.WebSockets
 {
     public class SocketsOptions
     {
-        internal readonly Dictionary<WebSocketCommands, Type> Map = 
-            new Dictionary<WebSocketCommands, Type>();
+        internal readonly List<WebSocketCommandMap> Map;
 
         public List<Type> Invocators { get; }
 
         public SocketsOptions()
         {
+            Map = new List<WebSocketCommandMap>();
             Invocators = new List<Type>();
         }
 
@@ -22,7 +23,8 @@ namespace NetCoreStack.WebSockets
             var values = commands.GetUniqueFlags().OfType<WebSocketCommands>().ToList();
             foreach (var value in values)
             {
-                Map.Add(value, invocatorType);
+                var commandMap = new WebSocketCommandMap(value, invocatorType);
+                Map.Add(commandMap);
             }
         }
     }
