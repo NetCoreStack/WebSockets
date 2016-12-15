@@ -10,11 +10,10 @@
 
   "frameworks": {
     "net451": {},
-    "netstandard1.3": {
+    "netstandard1.6": {
       "dependencies": {
         "System.Net.WebSockets.Client": "4.3.0"
-      },
-      "imports": "dnxcore50"
+      }
     }
   }
 }
