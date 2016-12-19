@@ -37,7 +37,7 @@ namespace WebClientTestApp
                 if (state != null)
                 {
                     object key = null;
-                    if (state.TryGetValue("Key", out key))
+                    if (state.TryGetValue(WebSocketHeaderNames.CacheItemKey, out key))
                     {
                         await Task.Run(() => _cacheProvider.SetObject(key.ToString(),
                              context.Value,

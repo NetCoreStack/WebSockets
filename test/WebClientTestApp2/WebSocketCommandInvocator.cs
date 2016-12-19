@@ -33,11 +33,11 @@ namespace WebClientTestApp2
 
             if (context.MessageType == WebSocketMessageType.Binary)
             {
-                var state = context.Header as Dictionary<string, object>;
-                if (state != null)
+                var header = context.Header as Dictionary<string, object>;
+                if (header != null)
                 {
                     object key = null;
-                    if(state.TryGetValue("Key", out key))
+                    if(header.TryGetValue(WebSocketHeaderNames.CacheItemKey, out key))
                     {
                         await Task.Run(() => _cacheProvider.SetObject(key.ToString(),
                              context.Value,
