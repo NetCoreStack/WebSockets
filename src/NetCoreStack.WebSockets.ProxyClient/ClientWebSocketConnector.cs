@@ -19,6 +19,14 @@ namespace NetCoreStack.WebSockets.ProxyClient
         private readonly ILoggerFactory _loggerFactory;
         private readonly InvocatorRegistry _invocatorRegistry;
 
+        public WebSocketState WebSocketState
+        {
+            get
+            {
+                return _webSocket.State;
+            }
+        }
+
         public ProxyOptions Options { get; }
 
         public ClientWebSocketConnector(IOptions<ProxyOptions> options, 
