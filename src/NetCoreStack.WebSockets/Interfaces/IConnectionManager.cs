@@ -10,7 +10,7 @@ namespace NetCoreStack.WebSockets
     {
         ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
 
-        Task ConnectAsync(WebSocket webSocket);
+        Task ConnectAsync(WebSocket webSocket, string connectorName = "");
 
         /// <summary>
         /// Text message broadcaster

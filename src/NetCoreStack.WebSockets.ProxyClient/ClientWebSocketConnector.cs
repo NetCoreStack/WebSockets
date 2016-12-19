@@ -19,6 +19,14 @@ namespace NetCoreStack.WebSockets.ProxyClient
         private readonly ILoggerFactory _loggerFactory;
         private readonly InvocatorRegistry _invocatorRegistry;
 
+        public string ConnectionId
+        {
+            get
+            {
+                return _connectionId;
+            }
+        }
+
         public WebSocketState WebSocketState
         {
             get
@@ -40,19 +48,6 @@ namespace NetCoreStack.WebSockets.ProxyClient
             Options = options.Value;
         }
 
-        private WebSocketMessageContext CreateConnectionContext()
-        {
-            var context = new WebSocketMessageContext();
-            context.MessageType = WebSocketMessageType.Text;
-            context.Command = WebSocketCommands.Connect;
-            context.Header = new Dictionary<string, object>
-            {
-                ["Name"] = Options.ConnectorName
-            };
-
-            return context;
-        }
-
         public async Task ConnectAsync()
         {
             try
@@ -60,6 +55,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 var name = Options.ConnectorName;
                 var uri = new Uri($"ws://{Options.WebSocketHostAddress}");
                 _webSocket = new ClientWebSocket();
+                _webSocket.Options.SetRequestHeader(SocketsConstants.ConnectorName, Options.ConnectorName);
                 await _webSocket.ConnectAsync(uri, CancellationToken.None);
                 var receiverContext = new WebSocketReceiverContext
                 {
@@ -69,7 +65,9 @@ namespace NetCoreStack.WebSockets.ProxyClient
                     Options = Options,
                     WebSocket = _webSocket
                 };
-                var receiver = new WebSocketReceiver(receiverContext, Close);
+                var receiver = new WebSocketReceiver(receiverContext, Close, (connectionId) => {
+                    _connectionId = connectionId;
+                });
                 await receiver.ReceiveAsync();
             }
             catch (Exception ex)

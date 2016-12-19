@@ -5,6 +5,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
 {
     public interface IWebSocketConnector
     {
+        string ConnectionId { get; }
         WebSocketState WebSocketState { get; }
         ProxyOptions Options { get; }
         Task ConnectAsync();

@@ -120,5 +120,14 @@ namespace ServerTestApp.Controllers
 
             return Ok();
         }
+
+        [HttpGet(nameof(GetConnections))]
+        public IActionResult GetConnections()
+        {
+            var connections = _connectionManager.Connections
+                .Select(x => new { ConnectionId = x.Value.ConnectionId, ConnectorName = x.Value.ConnectorName });
+
+            return Json(connections);
+        }
     }
 }

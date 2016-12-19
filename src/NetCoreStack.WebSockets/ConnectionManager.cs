@@ -110,9 +110,9 @@ namespace NetCoreStack.WebSockets
                            token);
         }
 
-        public async Task ConnectAsync(WebSocket webSocket)
+        public async Task ConnectAsync(WebSocket webSocket, string connectorName = "")
         {
-            WebSocketTransport transport = new WebSocketTransport(webSocket);
+            WebSocketTransport transport = new WebSocketTransport(webSocket, connectorName);
             var connectionId = transport.ConnectionId;
             var context = new WebSocketMessageContext();
             context.Command = WebSocketCommands.Handshake;

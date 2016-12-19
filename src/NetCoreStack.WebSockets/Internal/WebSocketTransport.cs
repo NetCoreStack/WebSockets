@@ -7,11 +7,13 @@ namespace NetCoreStack.WebSockets.Internal
     {
         public WebSocket WebSocket { get; }
         public string ConnectionId { get; }
+        public string ConnectorName { get; }
 
-        public WebSocketTransport(WebSocket webSocket)
+        public WebSocketTransport(WebSocket webSocket, string connectorName)
         {
             ConnectionId = Guid.NewGuid().ToString();
             WebSocket = webSocket;
+            ConnectorName = connectorName;
         }
 
         public void Dispose()

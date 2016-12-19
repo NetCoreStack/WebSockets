@@ -12,11 +12,13 @@ namespace NetCoreStack.WebSockets.Internal
     {
         private readonly WebSocketReceiverContext _context;
         private readonly Action<WebSocketReceiverContext> _closeCallback;
+        private readonly Action<string> _handshakeCallback;
 
-        public WebSocketReceiver(WebSocketReceiverContext context, Action<WebSocketReceiverContext> closeCallback)
+        public WebSocketReceiver(WebSocketReceiverContext context, Action<WebSocketReceiverContext> closeCallback, Action<string> handshakeCallback = null)
         {
             _context = context;
             _closeCallback = closeCallback;
+            _handshakeCallback = handshakeCallback;
         }
 
         private async Task InternalReceiveAsync()
@@ -29,7 +31,10 @@ namespace NetCoreStack.WebSockets.Internal
                 {
                     var context = result.ToContext(buffer);
                     if (context.Command == WebSocketCommands.Handshake)
+                    {
                         _context.ConnectionId = context.Value?.ToString();
+                        _handshakeCallback?.Invoke(_context.ConnectionId);
+                    }
 
                     var _invocators = _context.InvocatorRegistry.GetInvocators(context, _context.Options);
                     foreach (var invoker in _invocators)

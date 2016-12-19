@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using NetCoreStack.WebSockets.Interfaces;
 using System;
 using System.Net.WebSockets;
@@ -26,8 +27,15 @@ namespace NetCoreStack.WebSockets.Internal
         {
             if (httpContext.WebSockets.IsWebSocketRequest)
             {
+                string connectorName = string.Empty;
+                StringValues headerValue = "";
+                if (httpContext.Request.Headers.TryGetValue(SocketsConstants.ConnectorName, out headerValue))
+                {
+                    connectorName = headerValue.ToString();
+                }
+
                 var webSocket = await httpContext.WebSockets.AcceptWebSocketAsync();
-                await manager.ConnectAsync(webSocket);
+                await manager.ConnectAsync(webSocket, connectorName);
             }
             else
             {
