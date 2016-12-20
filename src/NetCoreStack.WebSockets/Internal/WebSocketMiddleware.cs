@@ -33,6 +33,13 @@ namespace NetCoreStack.WebSockets.Internal
                 {
                     connectorName = headerValue.ToString();
                 }
+                if (string.IsNullOrEmpty(connectorName))
+                {
+                    if (httpContext.Request.Query.ContainsKey(SocketsConstants.ConnectorName))
+                    {
+                        connectorName = httpContext.Request.Query[SocketsConstants.ConnectorName];
+                    }
+                }
 
                 var webSocket = await httpContext.WebSockets.AcceptWebSocketAsync();
                 await manager.ConnectAsync(webSocket, connectorName);

@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,7 +31,7 @@ namespace NetCoreStack.WebSockets
                 webSocketContext.Value = content;
                 webSocketContext.MessageType = result.MessageType;
             }
-            
+
             webSocketContext.Length = result.Count;
             return webSocketContext;
         }

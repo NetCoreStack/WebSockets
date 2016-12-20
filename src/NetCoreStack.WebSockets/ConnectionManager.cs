@@ -37,7 +37,7 @@ namespace NetCoreStack.WebSockets
             _initState = initState;
             _loggerFactory = loggerFactory;
             _compressor = compressor;
-            Connections = new ConcurrentDictionary<string, WebSocketTransport>();
+            Connections = new ConcurrentDictionary<string, WebSocketTransport>(StringComparer.OrdinalIgnoreCase);
         }
 
         private async Task<byte[]> PrepareBytesAsync(byte[] body, IDictionary<string, object> properties)

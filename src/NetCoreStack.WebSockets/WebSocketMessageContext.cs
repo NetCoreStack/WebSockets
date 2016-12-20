@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
 
 namespace NetCoreStack.WebSockets
@@ -30,7 +31,8 @@ namespace NetCoreStack.WebSockets
 
         public WebSocketMessageContext()
         {
-            Header = new Dictionary<string, object>();
+            Command = WebSocketCommands.DataSend;
+            Header = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
         }
     }
 }

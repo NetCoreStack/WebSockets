@@ -24,6 +24,13 @@
 
 <br />
 <div id="connectionContainer">
+    <div class="row" data-bind="visible: typeof(connectionId()) != 'undefined'">
+        <div class="col-sm-12 col-md-12 col-lg-12">
+            <div class="alert alert-success">
+                ConnectionId: <span data-bind="text: connectionId"></span>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-sm-12 col-md-12 col-lg-12">
             <div class="alert alert-warning" data-bind="html: logInfo">
@@ -36,8 +43,7 @@
                 <div class="input-group">
                     <input type="text" class="form-control" disabled="disabled" data-bind="value: connectionUrl">
                     <div class="input-group-btn">
-                        <button type="button" data-bind="click: connect, text: connectionState, css: connectionStatus">
-                        </button>
+                        <button type="button" data-bind="click: connect, text: connectionState, css: connectionStatus"></button>
                     </div>
                 </div>
                 <br />
@@ -80,10 +86,18 @@
         $(function () {
             'use strict';
 
+            var connectorName = "@Constants.ConnectorName"
             var containerId = "connectionContainer";
             var scheme = document.location.protocol == "https:" ? "wss" : "ws";
             var port = document.location.port ? (":" + document.location.port) : "";
             var socket;
+
+            var WebSocketCommands = {
+                Connect: 1,
+                DataSend: 2,
+                Handshake: 4,
+                All: 7
+            }
 
             var state = {
                 connect: "Connect",
@@ -93,9 +107,10 @@
 
             var ViewModel = function () {
                 var that = this;
+                this.connectionId = ko.observable();
                 this.data = ko.observable();
                 this.dataRows = ko.observableArray([]);
-                this.connectionUrl = ko.observable(scheme + "://" + document.location.hostname + port);
+                this.connectionUrl = ko.observable(scheme + "://" + document.location.hostname + port + "?connectorName=" + connectorName);
                 this.logInfo = ko.observable("Waiting for connection. To connect click the Connect button");
                 this.connectionState = ko.observable(state.connect);
                 this.connectionStatus = ko.pureComputed(function () {
@@ -139,14 +154,25 @@
                         }
                     };
                     socket.onmessage = function (event) {
-                        var row = {
-                            dataFrom: "Server",
-                            dataTo: "Client",
-                            colorFrom: "row-server",
-                            colorTo: "row-client",
-                            context: event.data
-                        };
-                        vm.dataRows.push(row);
+
+                        if (event.data) {
+
+                            var context = JSON.parse(event.data);
+
+                            console.log(vm.connectionId());
+                            if (context && context.Command == WebSocketCommands.Handshake) {
+                                vm.connectionId(context.Value);
+                            }
+
+                            var row = {
+                                dataFrom: "Server",
+                                dataTo: "Client",
+                                colorFrom: "row-server",
+                                colorTo: "row-client",
+                                context: event.data
+                            };
+                            vm.dataRows.push(row);
+                        }
                     };
                 };
 
@@ -162,7 +188,7 @@
                     if (!socket || socket.readyState != WebSocket.OPEN) {
                         vm.logInfo("Not connected!");
                     }
-                    var data = vm.data();
+                    var data = JSON.stringify({ header: { "connectorName": connectorName, "connectionId": vm.connectionId(), }, value: vm.data() });
                     socket.send(data);
                     var row = {
                         dataFrom: "Client",
