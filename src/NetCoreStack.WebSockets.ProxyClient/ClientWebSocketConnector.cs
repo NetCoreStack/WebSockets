@@ -85,9 +85,29 @@ namespace NetCoreStack.WebSockets.ProxyClient
             }
         }
 
+        private ArraySegment<byte> CreateTextSegment(WebSocketMessageContext context)
+        {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            object connectionId = string.Empty;
+            if (context.Header.TryGetValue(SocketsConstants.ConnectionId, out connectionId))
+            {
+                var id = connectionId as string;
+                if (string.IsNullOrEmpty(id))
+                    throw new InvalidOperationException(nameof(connectionId));
+            }
+            else
+                context.Header.Add(SocketsConstants.ConnectionId, ConnectionId);
+
+            return context.ToSegment();
+        }
+
         public async Task SendAsync(WebSocketMessageContext context)
         {
-            var segments = context.ToSegment();
+            var segments = CreateTextSegment(context);
             await _webSocket.SendAsync(segments, WebSocketMessageType.Text, true, CancellationToken.None);
         }
 

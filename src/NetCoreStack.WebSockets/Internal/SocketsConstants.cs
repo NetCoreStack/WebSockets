@@ -6,5 +6,6 @@
         public const int ChunkSize = 1024 * 4;
         public const string CompressedKey = "Compressed";
         public const string ConnectorName = "ConnectorName";
+        public const string ConnectionId = "ConnectionId";
     }
 }
