@@ -98,11 +98,6 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentNullException(nameof(webSocketContext));
             }
 
-            if (webSocketContext.Value == null)
-            {
-                throw new ArgumentNullException(nameof(webSocketContext.Value));
-            }
-
             var content = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(webSocketContext));
             return new ArraySegment<byte>(content, 0, content.Length);
         }
