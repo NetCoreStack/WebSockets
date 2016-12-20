@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using NetCoreStack.WebSockets.Interfaces;
 using NetCoreStack.WebSockets.Internal;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;

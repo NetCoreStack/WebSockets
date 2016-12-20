@@ -13,10 +13,7 @@ namespace WebClientTestApp
 
         public async Task InvokeAsync(WebSocketMessageContext context)
         {
-            if (context.Command == WebSocketCommands.Connect)
-            {
-
-            }
+            var connection = context.GetConnectionId();
 
             // Sending incoming data from Backend zone to the Clients (Browsers)
             await _connectionManager.BroadcastAsync(context);

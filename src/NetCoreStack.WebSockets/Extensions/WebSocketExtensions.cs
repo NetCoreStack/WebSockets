@@ -106,5 +106,21 @@ namespace NetCoreStack.WebSockets
             var content = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(webSocketContext));
             return new ArraySegment<byte>(content, 0, content.Length);
         }
+
+        public static string GetConnectionId(this WebSocketMessageContext webSocketContext)
+        {
+            if (webSocketContext == null)
+            {
+                throw new ArgumentNullException(nameof(webSocketContext));
+            }
+
+            object connectionId = null;
+            if (webSocketContext.Header.TryGetValue(SocketsConstants.ConnectionId, out connectionId))
+            {
+                return connectionId.ToString();
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(connectionId));
+        }
     }
 }
