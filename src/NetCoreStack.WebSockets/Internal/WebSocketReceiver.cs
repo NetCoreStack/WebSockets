@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using NetCoreStack.WebSockets.Interfaces;
-using System;
+﻿using System;
 using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
@@ -29,17 +27,24 @@ namespace NetCoreStack.WebSockets.Internal
             {
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
-                    var context = result.ToContext(buffer);
-                    if (context.Command == WebSocketCommands.Handshake)
+                    try
                     {
-                        _context.ConnectionId = context.Value?.ToString();
-                        _handshakeCallback?.Invoke(_context.ConnectionId);
-                    }
+                        var context = result.ToContext(buffer);
+                        if (context.Command == WebSocketCommands.Handshake)
+                        {
+                            _context.ConnectionId = context.Value?.ToString();
+                            _handshakeCallback?.Invoke(_context.ConnectionId);
+                        }
 
-                    var _invocators = _context.InvocatorRegistry.GetInvocators(context, _context.Options);
-                    foreach (var invoker in _invocators)
+                        var _invocators = _context.InvocatorRegistry.GetInvocators(context, _context.Options);
+                        foreach (var invoker in _invocators)
+                        {
+                            await invoker.InvokeAsync(context);
+                        }
+                    }
+                    catch (Exception ex)
                     {
-                        await invoker.InvokeAsync(context);
+                        LogHelper.Log(_context, ex);
                     }
                     result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 }
@@ -77,11 +82,7 @@ namespace NetCoreStack.WebSockets.Internal
                     }
                     catch (Exception ex)
                     {
-                        var logger = _context.LoggerFactory.CreateLogger<WebSocketReceiver>();
-                        logger.LogDebug(new EventId((int)WebSocketState.Aborted, 
-                            nameof(WebSocketState.Aborted)), 
-                            ex, "WebSocket transport exception!", 
-                            _context.Options);
+                        LogHelper.Log(_context, ex);
                     }
                     result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 }
@@ -98,11 +99,7 @@ namespace NetCoreStack.WebSockets.Internal
             }
             catch (Exception ex)
             {
-                var logger = _context.LoggerFactory.CreateLogger<ConnectionManager>();
-                logger.LogDebug(new EventId((int)WebSocketState.Aborted, nameof(WebSocketState.Aborted)),
-                    ex,
-                    "WebSocket connection end!",
-                    _context.Options);
+                LogHelper.Log(_context, ex);
             }
             finally
             {

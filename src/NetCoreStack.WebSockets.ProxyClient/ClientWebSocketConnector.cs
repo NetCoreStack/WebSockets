@@ -47,35 +47,36 @@ namespace NetCoreStack.WebSockets.ProxyClient
             Options = options.Value;
         }
 
+        private async Task TryConnectAsync()
+        {
+            var name = Options.ConnectorName;
+            var uri = new Uri($"ws://{Options.WebSocketHostAddress}");
+            _webSocket = new ClientWebSocket();
+            _webSocket.Options.SetRequestHeader(SocketsConstants.ConnectorName, Options.ConnectorName);
+            await _webSocket.ConnectAsync(uri, CancellationToken.None);
+            var receiverContext = new WebSocketReceiverContext
+            {
+                Compressor = _compressor,
+                InvocatorRegistry = _invocatorRegistry,
+                LoggerFactory = _loggerFactory,
+                Options = Options,
+                WebSocket = _webSocket
+            };
+            var receiver = new WebSocketReceiver(receiverContext, Close, (connectionId) => {
+                _connectionId = connectionId;
+            });
+            await receiver.ReceiveAsync();
+        }
+
         public async Task ConnectAsync()
         {
             try
             {
-                var name = Options.ConnectorName;
-                var uri = new Uri($"ws://{Options.WebSocketHostAddress}");
-                _webSocket = new ClientWebSocket();
-                _webSocket.Options.SetRequestHeader(SocketsConstants.ConnectorName, Options.ConnectorName);
-                await _webSocket.ConnectAsync(uri, CancellationToken.None);
-                var receiverContext = new WebSocketReceiverContext
-                {
-                    Compressor = _compressor,
-                    InvocatorRegistry = _invocatorRegistry,
-                    LoggerFactory = _loggerFactory,
-                    Options = Options,
-                    WebSocket = _webSocket
-                };
-                var receiver = new WebSocketReceiver(receiverContext, Close, (connectionId) => {
-                    _connectionId = connectionId;
-                });
-                await receiver.ReceiveAsync();
+                await TryConnectAsync();
             }
             catch (Exception ex)
             {
-                var logger = _loggerFactory.CreateLogger<ClientWebSocketConnector>();
-                logger.LogDebug(new EventId((int)WebSocketState.Aborted, nameof(WebSocketState.Aborted)),
-                    ex,
-                    "WebSocket connection end!",
-                    Options);
+                ProxyLogHelper.Log(_loggerFactory, Options, ex);
             }
             finally
             {

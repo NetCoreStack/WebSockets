@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets.Internal;
 using System.Net.WebSockets;
+using NetCoreStack.WebSockets.Interfaces;
 
-namespace NetCoreStack.WebSockets.Interfaces
+namespace NetCoreStack.WebSockets
 {
     public class WebSocketReceiverContext
     {
