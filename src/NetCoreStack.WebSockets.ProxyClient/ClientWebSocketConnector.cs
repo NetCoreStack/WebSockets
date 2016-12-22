@@ -53,7 +53,15 @@ namespace NetCoreStack.WebSockets.ProxyClient
             var uri = new Uri($"ws://{Options.WebSocketHostAddress}");
             _webSocket = new ClientWebSocket();
             _webSocket.Options.SetRequestHeader(SocketsConstants.ConnectorName, Options.ConnectorName);
-            await _webSocket.ConnectAsync(uri, CancellationToken.None);
+            try
+            {
+                await _webSocket.ConnectAsync(uri, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                ProxyLogHelper.Log(_loggerFactory, Options, "Error", ex);
+                return;
+            }
             var receiverContext = new WebSocketReceiverContext
             {
                 Compressor = _compressor,
@@ -76,7 +84,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             }
             catch (Exception ex)
             {
-                ProxyLogHelper.Log(_loggerFactory, Options, ex);
+                ProxyLogHelper.Log(_loggerFactory, Options, "Error", ex);
             }
             finally
             {

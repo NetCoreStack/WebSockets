@@ -8,17 +8,22 @@ namespace NetCoreStack.WebSockets.Internal
 {
     internal class LogHelper
     {
-        internal static void Log(WebSocketReceiverContext context, Exception ex)
+        internal static void Log(WebSocketReceiverContext context, string message, Exception ex = null)
         {
+            LogLevel logLevel = LogLevel.Debug;
+            if (ex != null)
+                logLevel = LogLevel.Error;
+
             var logger = context.LoggerFactory.CreateLogger<WebSocketReceiver>();
-            logger.Log(context.Options.LogLevel,
+            var content = $"{message}=={ex?.Message}";
+
+            logger.Log(logLevel,
                 new EventId((int)WebSocketState.Aborted, nameof(WebSocketState.Aborted)),
                 context.Options,
                 ex,
                 (msg, exception) => {
-
                     var values = new Dictionary<string, object>();
-                    values.Add(nameof(ex.Message), ex.Message);
+                    values.Add("Message", content);
                     return JsonConvert.SerializeObject(values);
                 });
         }

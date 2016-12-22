@@ -44,7 +44,7 @@ namespace NetCoreStack.WebSockets.Internal
                     }
                     catch (Exception ex)
                     {
-                        LogHelper.Log(_context, ex);
+                        LogHelper.Log(_context, "Error", ex);
                     }
                     result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 }
@@ -82,7 +82,7 @@ namespace NetCoreStack.WebSockets.Internal
                     }
                     catch (Exception ex)
                     {
-                        LogHelper.Log(_context, ex);
+                        LogHelper.Log(_context, "Error", ex);
                     }
                     result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 }
@@ -99,16 +99,11 @@ namespace NetCoreStack.WebSockets.Internal
             }
             catch (Exception ex)
             {
-                LogHelper.Log(_context, ex);
+                LogHelper.Log(_context, "Error", ex);
             }
             finally
             {
-                if (_context.WebSocket.State == WebSocketState.Open ||
-                    _context.WebSocket.State == WebSocketState.Aborted ||
-                    _context.WebSocket.State == WebSocketState.Closed)
-                {
-                    _closeCallback?.Invoke(_context);
-                }
+                _closeCallback?.Invoke(_context);
             }
         }
     }
