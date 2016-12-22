@@ -30,6 +30,9 @@ namespace NetCoreStack.WebSockets.ProxyClient
         {
             get
             {
+                if (_webSocket == null)
+                    throw new InvalidOperationException("Make sure async instantiation completed and try again Connect!");
+
                 return _webSocket.State;
             }
         }
