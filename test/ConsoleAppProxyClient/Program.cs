@@ -3,9 +3,6 @@ using NetCoreStack.WebSockets;
 using NetCoreStack.WebSockets.ProxyClient;
 using NetCoreStack.WebSockets.ProxyClient.Console;
 using System;
-using System.Diagnostics;
-using System.Net.WebSockets;
-using System.Threading.Tasks;
 
 namespace ConsoleAppProxyClient
 {

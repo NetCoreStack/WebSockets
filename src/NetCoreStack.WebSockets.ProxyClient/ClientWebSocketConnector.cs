@@ -50,7 +50,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             Options = options.Value;
         }
 
-        private async Task TryConnectAsync()
+        private async Task TryConnectAsync(CancellationTokenSource cancellationTokenSource = null)
         {
             var name = Options.ConnectorName;
             var uri = new Uri($"ws://{Options.WebSocketHostAddress}");
@@ -58,6 +58,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             _webSocket.Options.SetRequestHeader(SocketsConstants.ConnectorName, Options.ConnectorName);
             try
             {
+                CancellationToken token = cancellationTokenSource != null ? cancellationTokenSource.Token : CancellationToken.None;
                 await _webSocket.ConnectAsync(uri, CancellationToken.None);
             }
             catch (Exception ex)
@@ -79,20 +80,26 @@ namespace NetCoreStack.WebSockets.ProxyClient
             await receiver.ReceiveAsync();
         }
 
-        public async Task ConnectAsync()
+        public async Task ConnectAsync(CancellationTokenSource cancellationTokenSource = null)
         {
-            try
+            if (cancellationTokenSource == null)
+                cancellationTokenSource = new CancellationTokenSource();
+
+            while (!cancellationTokenSource.IsCancellationRequested)
             {
-                await TryConnectAsync();
-            }
-            catch (Exception ex)
-            {
-                ProxyLogHelper.Log(_loggerFactory, Options, "Error", ex);
-            }
-            finally
-            {
-                if (_webSocket != null)
-                    _webSocket.Dispose();
+                try
+                {
+                    await TryConnectAsync(cancellationTokenSource);
+                }
+                catch (Exception ex)
+                {
+                    ProxyLogHelper.Log(_loggerFactory, Options, "Error", ex);
+                }
+
+                if (WebSocketState == WebSocketState.Open)
+                {
+                    break;
+                }
             }
         }
 

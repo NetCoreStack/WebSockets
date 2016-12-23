@@ -1,4 +1,5 @@
 ﻿using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets.ProxyClient
@@ -8,7 +9,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
         string ConnectionId { get; }
         WebSocketState WebSocketState { get; }
         ProxyOptions Options { get; }
-        Task ConnectAsync();
+        Task ConnectAsync(CancellationTokenSource cancellationTokenSource);
         Task SendAsync(WebSocketMessageContext context);
         Task SendBinaryAsync(byte[] bytes);
     }

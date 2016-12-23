@@ -34,7 +34,7 @@ namespace WebClientTestApp2
 
             // Client WebSocket - DMZ to API side connections
             services.AddProxyWebSockets(options => {
-                options.ConnectorName = Environment.MachineName;
+                options.ConnectorName = $"TestApp2-{Environment.MachineName}";
                 options.WebSocketHostAddress = "localhost:7803";
                 options.RegisterInvocator<WebSocketCommandInvocator>(WebSocketCommands.All);
             });

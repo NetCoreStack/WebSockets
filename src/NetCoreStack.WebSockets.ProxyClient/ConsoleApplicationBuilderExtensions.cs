@@ -1,13 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets.ProxyClient.Console
 {
     public static class ConsoleApplicationBuilderExtensions
     {
-        public static IServiceProvider UseProxyWebSocket(this IServiceProvider services)
+        public static IServiceProvider UseProxyWebSocket(this IServiceProvider services, CancellationTokenSource cancellationTokenSource = null)
         {
             var loggerFactory = services.GetService<ILoggerFactory>();
             if (loggerFactory == null)
@@ -18,7 +19,7 @@ namespace NetCoreStack.WebSockets.ProxyClient.Console
             if (webSocketConnector == null)
                 throw new ArgumentNullException($"{nameof(webSocketConnector)} please try AddProxyWebSockets");
 
-            Task.Run(async () => await webSocketConnector.ConnectAsync());
+            Task.Run(async () => await webSocketConnector.ConnectAsync(cancellationTokenSource));
 
             return services;
         }
