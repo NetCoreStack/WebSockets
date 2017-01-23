@@ -18,7 +18,7 @@
     "Microsoft.Extensions.Options.ConfigurationExtensions": "1.1.0",
     "Microsoft.Extensions.Configuration.CommandLine": "1.1.0",
     "Swashbuckle": "6.0.0-beta902",
-    "NetCoreStack.WebSockets": "1.0.0-*",
+    "NetCoreStack.WebSockets": "1.0.1-*",
     "Microsoft.Extensions.Caching.Redis": "1.1.0",
     "Common.Libs": "1.0.0-*"
   },

@@ -10,8 +10,8 @@
     "System.Runtime.InteropServices": "4.3.0",
     "NETStandard.Library": "1.6.1",
     "Microsoft.Extensions.DependencyInjection": "1.1.0",
-    "NetCoreStack.WebSockets": "1.0.0-*",
-    "NetCoreStack.WebSockets.ProxyClient": "1.0.0-*"
+    "NetCoreStack.WebSockets": "1.0.1-*",
+    "NetCoreStack.WebSockets.ProxyClient": "1.0.1-*"
   },
 
   "frameworks": {
