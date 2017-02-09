@@ -10,7 +10,7 @@ namespace NetCoreStack.WebSockets
     {
         ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
 
-        Task ConnectAsync(WebSocket webSocket, string connectorName = "");
+        Task ConnectAsync(WebSocket webSocket, string connectionId, string connectorName = "");
 
         /// <summary>
         /// Text message broadcaster
@@ -49,6 +49,6 @@ namespace NetCoreStack.WebSockets
         /// Close the specified connection
         /// </summary>
         /// <param name="connectionId"></param>
-        void CloseConnection(string connectionId);
+        void CloseConnection(string connectionId, bool keepAlive);
     }
 }

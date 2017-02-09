@@ -81,13 +81,13 @@
 </div>
 
 @section scripts {
+<script src="~/js/reconnecting-websocket.min.js"></script>
     <script>
 
         $(function () {
             'use strict';
 
-            var connectionId = Cookies.get("connectionId");
-            var connectorName = "@Constants.ConnectorName";
+            var connectorName = "@Constants.ConnectorName"
             var containerId = "connectionContainer";
             var scheme = document.location.protocol == "https:" ? "wss" : "ws";
             var port = document.location.port ? (":" + document.location.port) : "";
@@ -111,7 +111,7 @@
                 this.connectionId = ko.observable();
                 this.data = ko.observable();
                 this.dataRows = ko.observableArray([]);
-                this.connectionUrl = ko.observable(scheme + "://" + document.location.hostname + port + "?connectionId=" + connectionId + "&connectorName=" + connectorName);
+                this.connectionUrl = ko.observable(scheme + "://" + document.location.hostname + port + "?connectorName=" + connectorName);
                 this.logInfo = ko.observable("Waiting for connection. To connect click the Connect button");
                 this.connectionState = ko.observable(state.connect);
                 this.connectionStatus = ko.pureComputed(function () {
