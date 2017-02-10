@@ -86,7 +86,8 @@
         $(function () {
             'use strict';
 
-            var connectorName = "@Constants.ConnectorName"
+            var connectionId = Cookies.get("connectionId");            
+            var connectorName = "@Constants.ConnectorName";
             var containerId = "connectionContainer";
             var scheme = document.location.protocol == "https:" ? "wss" : "ws";
             var port = document.location.port ? (":" + document.location.port) : "";
@@ -110,7 +111,7 @@
                 this.connectionId = ko.observable();
                 this.data = ko.observable();
                 this.dataRows = ko.observableArray([]);
-                this.connectionUrl = ko.observable(scheme + "://" + document.location.hostname + port + "?connectorName=" + connectorName);
+                this.connectionUrl = ko.observable(scheme + "://" + document.location.hostname + port + "?connectionId=" + connectionId + "&connectorName=" + connectorName);
                 this.logInfo = ko.observable("Waiting for connection. To connect click the Connect button");
                 this.connectionState = ko.observable(state.connect);
                 this.connectionStatus = ko.pureComputed(function () {
@@ -162,6 +163,7 @@
                             console.log(vm.connectionId());
                             if (context && context.Command == WebSocketCommands.Handshake) {
                                 vm.connectionId(context.Value);
+                                Cookies.set('connectionId', context.Value);
                             }
 
                             var row = {

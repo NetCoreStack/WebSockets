@@ -124,18 +124,8 @@ namespace NetCoreStack.WebSockets
             }
         }
 
-        public async Task ConnectAsync(WebSocket webSocket, string connectorName = "")
+        public async Task ConnectAsync(WebSocket webSocket, string connectionId, string connectorName = "")
         {
-            WebSocketTransport transport = new WebSocketTransport(webSocket, connectorName);
-            var connectionId = transport.ConnectionId;
-            var context = new WebSocketMessageContext();
-            context.Command = WebSocketCommands.Handshake;
-            context.Value = connectionId;
-            context.Header = await _initState.GetStateAsync();
-            Connections.TryAdd(connectionId, transport);
-
-            await SendAsync(connectionId, context);
-
             var receiverContext = new WebSocketReceiverContext
             {
                 Compressor = _compressor,
@@ -145,6 +135,24 @@ namespace NetCoreStack.WebSockets
                 Options = _options,
                 WebSocket = webSocket
             };
+            
+            WebSocketTransport transport = null;
+            if (Connections.TryGetValue(connectionId, out transport))
+            {
+                transport.ReConnect(webSocket);
+            }
+            else
+            {
+                transport = new WebSocketTransport(webSocket, connectionId, connectorName);
+                var context = new WebSocketMessageContext();
+                context.Command = WebSocketCommands.Handshake;
+                context.Value = connectionId;
+                context.Header = await _initState.GetStateAsync();
+                Connections.TryAdd(connectionId, transport);
+
+                await SendAsync(connectionId, context);
+            }
+
             var receiver = new WebSocketReceiver(receiverContext, CloseConnection);
             await receiver.ReceiveAsync();
         }
@@ -281,18 +289,34 @@ namespace NetCoreStack.WebSockets
             }
         }
 
-        public void CloseConnection(string connectionId)
+        public void CloseConnection(string connectionId, bool keepAlive)
         {
             WebSocketTransport transport = null;
-            if (Connections.TryRemove(connectionId, out transport))
+            if (keepAlive)
             {
-                transport.Dispose();
+                if (Connections.TryGetValue(connectionId, out transport))
+                {
+                    transport.Dispose();
+                }
+            }
+            else
+            {
+                if (Connections.TryRemove(connectionId, out transport))
+                {
+                    transport.Dispose();
+                }
             }
         }
 
         public void CloseConnection(WebSocketReceiverContext context)
         {
-            CloseConnection(context.ConnectionId);
+            bool keepAlive = false;
+            if (context.WebSocket.CloseStatus == WebSocketCloseStatus.EndpointUnavailable)
+            {
+                keepAlive = true;
+            }
+
+            CloseConnection(context.ConnectionId, keepAlive);
         }
     }
 }

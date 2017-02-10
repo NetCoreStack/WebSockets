@@ -4,7 +4,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using NetCoreStack.WebSockets.Interfaces;
 using System;
-using System.Net.WebSockets;
 using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets.Internal
@@ -27,12 +26,18 @@ namespace NetCoreStack.WebSockets.Internal
         {
             if (httpContext.WebSockets.IsWebSocketRequest)
             {
+                string connectionId = string.Empty;
                 string connectorName = string.Empty;
                 StringValues headerValue = "";
                 if (httpContext.Request.Headers.TryGetValue(SocketsConstants.ConnectorName, out headerValue))
                 {
                     connectorName = headerValue.ToString();
                 }
+                if (httpContext.Request.Headers.TryGetValue(SocketsConstants.ConnectionId, out headerValue))
+                {
+                    connectionId = headerValue.ToString();
+                }
+
                 if (string.IsNullOrEmpty(connectorName))
                 {
                     if (httpContext.Request.Query.ContainsKey(SocketsConstants.ConnectorName))
@@ -40,9 +45,25 @@ namespace NetCoreStack.WebSockets.Internal
                         connectorName = httpContext.Request.Query[SocketsConstants.ConnectorName];
                     }
                 }
+                if (string.IsNullOrEmpty(connectionId))
+                {
+                    if (httpContext.Request.Query.ContainsKey(SocketsConstants.ConnectionId))
+                    {
+                        connectionId = httpContext.Request.Query[SocketsConstants.ConnectionId];
+                        Guid connectionIdGuid = Guid.Empty;
+                        if (!Guid.TryParse(connectionId, out connectionIdGuid))
+                        {
+                            connectionId = string.Empty;
+                        }
+                    }
+                }
 
                 var webSocket = await httpContext.WebSockets.AcceptWebSocketAsync();
-                await manager.ConnectAsync(webSocket, connectorName);
+                if (string.IsNullOrEmpty(connectionId))
+                {
+                    connectionId = Guid.NewGuid().ToString("N");
+                }
+                await manager.ConnectAsync(webSocket, connectionId: connectionId, connectorName: connectorName);
             }
             else
             {
