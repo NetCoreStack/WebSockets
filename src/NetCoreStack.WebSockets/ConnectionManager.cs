@@ -24,19 +24,22 @@ namespace NetCoreStack.WebSockets
         private readonly IHandshakeStateTransport _initState;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IStreamCompressor _compressor;
+        private readonly TransportLifetimeManager _lifetimeManager;
         public ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
 
         public ConnectionManager(IStreamCompressor compressor,
+            TransportLifetimeManager lifetimeManager,
             InvocatorRegistry invocatorRegistry,
             IOptions<ServerSocketsOptions> options,
             IHandshakeStateTransport initState,
             ILoggerFactory loggerFactory)
         {
+            _compressor = compressor;
+            _lifetimeManager = lifetimeManager;
             _invocatorRegistry = invocatorRegistry;
             _options = options.Value;
             _initState = initState;
-            _loggerFactory = loggerFactory;
-            _compressor = compressor;
+            _loggerFactory = loggerFactory;            
             Connections = new ConcurrentDictionary<string, WebSocketTransport>(StringComparer.OrdinalIgnoreCase);
         }
 
@@ -89,10 +92,18 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentNullException(nameof(descriptor.Segments));
             }
 
-            await transport.WebSocket.SendAsync(descriptor.Segments, 
-                descriptor.MessageType, 
-                descriptor.EndOfMessage, 
-                CancellationToken.None);
+            if (!transport.WebSocket.CloseStatus.HasValue)
+            {
+                await transport.WebSocket.SendAsync(descriptor.Segments,
+                   descriptor.MessageType,
+                   descriptor.EndOfMessage,
+                   CancellationToken.None);
+            }
+            else
+            {
+                // Only text messages
+                _lifetimeManager.AddQueue(new MessageHolder { ConnectionId = transport.ConnectionId, Segments = descriptor.Segments });
+            }
         }
 
         private async Task SendBinaryAsync(WebSocketTransport transport, byte[] chunkedBytes, bool endOfMessage, CancellationToken token)
@@ -104,10 +115,13 @@ namespace NetCoreStack.WebSockets
 
             var segments = new ArraySegment<byte>(chunkedBytes);
 
-            await transport.WebSocket.SendAsync(segments,
-                           WebSocketMessageType.Binary,
-                           endOfMessage,
-                           token);
+            if (!transport.WebSocket.CloseStatus.HasValue)
+            {
+                await transport.WebSocket.SendAsync(segments,
+                   WebSocketMessageType.Binary,
+                   endOfMessage,
+                   token);
+            }
         }
 
         public async Task ConnectAsync(WebSocket webSocket, string connectorName = "")
