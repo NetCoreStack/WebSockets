@@ -102,7 +102,11 @@ namespace NetCoreStack.WebSockets
             else
             {
                 // Only text messages
-                _lifetimeManager.AddQueue(new MessageHolder { ConnectionId = transport.ConnectionId, Segments = descriptor.Segments });
+                _lifetimeManager.AddQueue(transport.ConnectionId, new MessageHolder
+                {
+                    Segments = descriptor.Segments,
+                    KeepTime = DateTime.Now.AddMinutes(3)
+                });
             }
         }
 
@@ -140,6 +144,17 @@ namespace NetCoreStack.WebSockets
             if (Connections.TryGetValue(connectionId, out transport))
             {
                 transport.ReConnect(webSocket);
+                List<MessageHolder> messages = _lifetimeManager.TryDequeue(connectionId);
+                foreach (var message in messages)
+                {
+                    await SendAsync(transport, new WebSocketMessageDescriptor
+                    {
+                        MessageType = WebSocketMessageType.Text,
+                        Segments = message.Segments,
+                        EndOfMessage = true,
+                        IsQueue = true,
+                    });
+                }
             }
             else
             {

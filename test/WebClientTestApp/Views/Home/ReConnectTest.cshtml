@@ -43,7 +43,7 @@
                 <div class="input-group">
                     <input type="text" class="form-control" disabled="disabled" data-bind="value: connectionUrl">
                     <div class="input-group-btn">
-                        <button type="button" data-bind="click: connect, text: connectionState, css: connectionStatus"></button>
+                        <button id="btnConnect" type="button" data-bind="click: connect, text: connectionState, css: connectionStatus"></button>
                     </div>
                 </div>
                 <br />
@@ -81,13 +81,14 @@
 </div>
 
 @section scripts {
-<script src="~/js/reconnecting-websocket.min.js"></script>
+    <script src="~/js/reconnecting-websocket.min.js"></script>
     <script>
 
         $(function () {
             'use strict';
 
-            var connectorName = "@Constants.ConnectorName"
+            var connectionId = Cookies.get("connectionId");
+            var connectorName = "@Constants.ConnectorName";
             var containerId = "connectionContainer";
             var scheme = document.location.protocol == "https:" ? "wss" : "ws";
             var port = document.location.port ? (":" + document.location.port) : "";
@@ -111,8 +112,8 @@
                 this.connectionId = ko.observable();
                 this.data = ko.observable();
                 this.dataRows = ko.observableArray([]);
-                this.connectionUrl = ko.observable(scheme + "://" + document.location.hostname + port + "?connectorName=" + connectorName);
-                this.logInfo = ko.observable("Waiting for connection. To connect click the Connect button");
+                this.connectionUrl = ko.observable(scheme + "://" + document.location.hostname + port + "?connectionId=" + connectionId + "&connectorName=" + connectorName);
+                this.logInfo = ko.observable("Waiting for connection...");
                 this.connectionState = ko.observable(state.connect);
                 this.connectionStatus = ko.pureComputed(function () {
 
@@ -134,7 +135,7 @@
                     }
 
                     vm.logInfo("Connecting...");
-                    socket = new WebSocket(vm.connectionUrl());
+                    socket = new ReconnectingWebSocket(vm.connectionUrl());
                     socket.onopen = function (event) {
                         vm.connectionState(state.connected);
                         vm.logInfo("Connection opened");
@@ -203,7 +204,9 @@
                 }
             };
 
-            ko.applyBindings(new ViewModel(), document.getElementById(containerId));
+            var instance = new ViewModel();
+            ko.applyBindings(instance, document.getElementById(containerId));
+            instance.connect(instance, document.getElementById('btnConnect'));
         });
     </script>
 }

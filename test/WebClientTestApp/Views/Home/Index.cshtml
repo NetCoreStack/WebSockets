@@ -43,7 +43,7 @@
                 <div class="input-group">
                     <input type="text" class="form-control" disabled="disabled" data-bind="value: connectionUrl">
                     <div class="input-group-btn">
-                        <button type="button" data-bind="click: connect, text: connectionState, css: connectionStatus"></button>
+                        <button id="btnConnect" type="button" data-bind="click: connect, text: connectionState, css: connectionStatus"></button>
                     </div>
                 </div>
                 <br />
@@ -203,7 +203,12 @@
                 }
             };
 
-            ko.applyBindings(new ViewModel(), document.getElementById(containerId));
+            var instance = new ViewModel();
+            ko.applyBindings(instance, document.getElementById(containerId));
+
+            setTimeout(function () {
+                $("#btnConnect").trigger('click');
+            }, 600);
         });
     </script>
 }

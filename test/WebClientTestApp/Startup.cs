@@ -25,8 +25,7 @@ namespace WebClientTestApp
         }
 
         public IConfigurationRoot Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
+        
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMemoryCache();
@@ -34,8 +33,8 @@ namespace WebClientTestApp
 
             // Client WebSocket - DMZ to API side connections
             services.AddProxyWebSockets(options => {
-                options.ConnectorName = $"TestApp-{Environment.MachineName}";
-                options.WebSocketHostAddress = "localhost:7803";
+                options.ConnectorName = $"TestWebApp-{Environment.MachineName}";
+                options.WebSocketHostAddress = "localhost:5000";
                 options.RegisterInvocator<CustomWebSocketCommandInvocator>(WebSocketCommands.All);
             });
 
@@ -49,8 +48,7 @@ namespace WebClientTestApp
                 options.Filters.Add(new ClientExceptionFilterAttribute());
             });
         }
-
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));

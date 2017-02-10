@@ -9,6 +9,7 @@ namespace NetCoreStack.WebSockets.Internal
         public ArraySegment<byte> Segments { get; set; }
         public WebSocketMessageType MessageType { get; set; }
         public bool EndOfMessage { get; set; }
+        public bool IsQueue { get; set; }
         public CancellationToken CancellationToken { get; set; }
 
         public WebSocketMessageDescriptor()
