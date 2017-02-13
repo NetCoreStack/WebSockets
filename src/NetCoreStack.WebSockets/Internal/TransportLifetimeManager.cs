@@ -19,10 +19,24 @@ namespace NetCoreStack.WebSockets.Internal
         public void CheckQueue(object state)
         {
             var now = DateTime.Now;
+            List<string> enableRemoveConnections = new List<string>();
             foreach (KeyValuePair<string, List<MessageHolder>> entry in _queueDict)
             {
                 List<MessageHolder> timeoutItems = entry.Value.Where(p => p.KeepTime < now).ToList();
                 entry.Value.RemoveAll(p => p.KeepTime < now);
+                if (entry.Value.Count == 0)
+                {
+                    enableRemoveConnections.Add(entry.Key);
+                }
+            }
+
+            foreach (var connection in enableRemoveConnections)
+            {
+                List<MessageHolder> queue = null;
+                if (_queueDict.TryRemove(connection, out queue))
+                {
+
+                }
             }
         }
 
@@ -43,11 +57,10 @@ namespace NetCoreStack.WebSockets.Internal
         public List<MessageHolder> TryDequeue(string connectionId)
         {
             List<MessageHolder> queue = null;
-            if (_queueDict.TryGetValue(connectionId, out queue))
+            if (_queueDict.TryRemove(connectionId, out queue))
             {
                 var now = DateTime.Now;
                 var items = queue.Where(x => x.KeepTime > now).ToList();
-                queue.RemoveAll(x => x.KeepTime > now);
                 return items;
             }
 
