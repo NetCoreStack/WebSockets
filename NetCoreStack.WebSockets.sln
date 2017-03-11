@@ -1,34 +1,33 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{52C54080-F48B-4DBA-A418-8057611CAF6D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A1704016-03C8-4917-9C50-AE9DDF55ECB7}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "AutobahnTestApp", "test\AutobahnTestApp\AutobahnTestApp.xproj", "{6AB2B480-3BC6-4A17-9298-906DB11235CB}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A5D3D4D6-7DAB-4ACD-97EB-5435C9AE74A9}"
 	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
 		NuGet.config = NuGet.config
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ServerTestApp", "test\ServerTestApp\ServerTestApp.xproj", "{B8DE19DA-F0D1-48BA-B808-631A27D74C2B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutobahnTestApp", "test\AutobahnTestApp\AutobahnTestApp.csproj", "{6AB2B480-3BC6-4A17-9298-906DB11235CB}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "WebClientTestApp", "test\WebClientTestApp\WebClientTestApp.xproj", "{079F8A19-BC40-46AC-A31F-B133F7D7F1B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerTestApp", "test\ServerTestApp\ServerTestApp.csproj", "{B8DE19DA-F0D1-48BA-B808-631A27D74C2B}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "NetCoreStack.WebSockets", "src\NetCoreStack.WebSockets\NetCoreStack.WebSockets.xproj", "{C6BD4266-256A-4FF6-B991-D44EFC825FC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebClientTestApp", "test\WebClientTestApp\WebClientTestApp.csproj", "{079F8A19-BC40-46AC-A31F-B133F7D7F1B8}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "NetCoreStack.WebSockets.ProxyClient", "src\NetCoreStack.WebSockets.ProxyClient\NetCoreStack.WebSockets.ProxyClient.xproj", "{7E772C91-3D01-4886-A591-BD663D9B017F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetCoreStack.WebSockets", "src\NetCoreStack.WebSockets\NetCoreStack.WebSockets.csproj", "{C6BD4266-256A-4FF6-B991-D44EFC825FC6}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "WebClientTestApp2", "test\WebClientTestApp2\WebClientTestApp2.xproj", "{7B3B956E-DF5A-4AD8-BCB9-14235D53471C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetCoreStack.WebSockets.ProxyClient", "src\NetCoreStack.WebSockets.ProxyClient\NetCoreStack.WebSockets.ProxyClient.csproj", "{7E772C91-3D01-4886-A591-BD663D9B017F}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Common.Libs", "test\Common.Libs\Common.Libs.xproj", "{7ACFEED0-C1D7-43DE-95D7-3D2CEFDF6F9F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebClientTestApp2", "test\WebClientTestApp2\WebClientTestApp2.csproj", "{7B3B956E-DF5A-4AD8-BCB9-14235D53471C}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ConsoleAppProxyClient", "test\ConsoleAppProxyClient\ConsoleAppProxyClient.xproj", "{1AAECD28-5C1D-4ED6-8CBC-6FCAA3804ABF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common.Libs", "test\Common.Libs\Common.Libs.csproj", "{7ACFEED0-C1D7-43DE-95D7-3D2CEFDF6F9F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleAppProxyClient", "test\ConsoleAppProxyClient\ConsoleAppProxyClient.csproj", "{1AAECD28-5C1D-4ED6-8CBC-6FCAA3804ABF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
