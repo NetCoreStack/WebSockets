@@ -14,15 +14,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\NetCoreStack.WebSockets\NetCoreStack.WebSockets.csproj" />
     <ProjectReference Include="..\..\src\NetCoreStack.WebSockets.ProxyClient\NetCoreStack.WebSockets.ProxyClient.csproj" />
+    <ProjectReference Include="..\..\src\NetCoreStack.WebSockets\NetCoreStack.WebSockets.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="1.1.2" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.3.0" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.1.1" />
   </ItemGroup>
 
 </Project>
