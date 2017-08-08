@@ -12,9 +12,9 @@ namespace Common.Libs
             {
                 var dict = new Dictionary<string, CacheItemDescriptor>()
                 {
-                    [nameof(HizmetEnvanteri)] = new CacheItemDescriptor { Type = typeof(HizmetEnvanteri), Weight = CacheItemWeights.MiddleWeight },
-                    [nameof(KurumBirimDto)] = new CacheItemDescriptor { Type = typeof(KurumBirimDto), Weight = CacheItemWeights.HeavyWeight },
-                    [nameof(KurumBirimPasifDto)] = new CacheItemDescriptor { Type = typeof(KurumBirimPasifDto), Weight = CacheItemWeights.MiddleWeight },
+                    [nameof(CacheItem2)] = new CacheItemDescriptor { Type = typeof(CacheItem2), Weight = CacheItemWeights.MiddleWeight },
+                    [nameof(CacheItem1)] = new CacheItemDescriptor { Type = typeof(CacheItem1), Weight = CacheItemWeights.HeavyWeight },
+                    [nameof(CacheItem3)] = new CacheItemDescriptor { Type = typeof(CacheItem3), Weight = CacheItemWeights.MiddleWeight },
                 };
 
                 var keys = dict.OrderBy(x => x.Key).ToDictionary(t => t.Key, t => t.Value);

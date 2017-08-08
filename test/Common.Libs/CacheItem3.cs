@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Common.Libs
 {
-    public class HizmetEnvanteri
+    public class CacheItem3
     {
     }
 }

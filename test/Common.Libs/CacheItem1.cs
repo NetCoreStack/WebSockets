@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Common.Libs
 {
-    public class KurumBirimDto
+    public class CacheItem1
     {
     }
 }
