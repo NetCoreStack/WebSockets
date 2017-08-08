@@ -1,22 +1,36 @@
-﻿using NetCoreStack.WebSockets;
+﻿using Common.Libs;
+using Microsoft.Extensions.Caching.Distributed;
+using NetCoreStack.WebSockets;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 
-namespace WebClientTestApp
+namespace ServerTestApp
 {
     public class ServerWebSocketCommandInvocator : IServerWebSocketCommandInvocator
     {
         private readonly IConnectionManager _connectionManager;
-        public ServerWebSocketCommandInvocator(IConnectionManager connectionManager)
+        private readonly IDistributedCache _cache;
+        public ServerWebSocketCommandInvocator(IDistributedCache cache, IConnectionManager connectionManager)
         {
+            _cache = cache;
             _connectionManager = connectionManager;
         }
 
         public async Task InvokeAsync(WebSocketMessageContext context)
         {
-            var connection = context.GetConnectionId();
-
-            // Sending incoming data from Backend zone to the Clients (Browsers)
-            await _connectionManager.BroadcastAsync(context);
+            if (context.MessageType == WebSocketMessageType.Text
+                && context.Command == WebSocketCommands.DataSend)
+            {
+                if (context.Header != null)
+                {
+                    object cacheRequest = null;
+                    if (context.Header.TryGetValue(nameof(WebSocketHeaderNames.CacheRequest), out cacheRequest))
+                    {
+                        var connectionId = context.Value.ToString();
+                        await _cache.SendCache(_connectionManager, connectionId);
+                    }
+                }
+            }
         }
     }
 }

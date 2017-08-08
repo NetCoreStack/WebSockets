@@ -19,12 +19,14 @@ namespace NetCoreStack.WebSockets
 {
     public class ConnectionManager : IConnectionManager
     {
+        private readonly SemaphoreSlim _sendFrameAsyncLock = new SemaphoreSlim(1, 1);
         private readonly InvocatorRegistry _invocatorRegistry;
         private readonly ServerSocketsOptions _options;
         private readonly IHandshakeStateTransport _initState;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IStreamCompressor _compressor;
         private readonly TransportLifetimeManager _lifetimeManager;
+
         public ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
 
         public ConnectionManager(IStreamCompressor compressor,
@@ -43,7 +45,7 @@ namespace NetCoreStack.WebSockets
             Connections = new ConcurrentDictionary<string, WebSocketTransport>(StringComparer.OrdinalIgnoreCase);
         }
 
-        private async Task<byte[]> PrepareBytesAsync(byte[] body, IDictionary<string, object> properties)
+        private async Task<byte[]> PrepareFramesBytesAsync(byte[] body, IDictionary<string, object> properties)
         {
             if (body == null)
             {
@@ -80,7 +82,7 @@ namespace NetCoreStack.WebSockets
             return body;
         }
 
-        private async Task SendAsync(WebSocketTransport transport, WebSocketMessageDescriptor descriptor)
+        private Task SendAsync(WebSocketTransport transport, WebSocketMessageDescriptor descriptor)
         {
             if (descriptor == null)
             {
@@ -94,7 +96,7 @@ namespace NetCoreStack.WebSockets
 
             if (!transport.WebSocket.CloseStatus.HasValue)
             {
-                await transport.WebSocket.SendAsync(descriptor.Segments,
+                return transport.WebSocket.SendAsync(descriptor.Segments,
                    descriptor.MessageType,
                    descriptor.EndOfMessage,
                    CancellationToken.None);
@@ -107,10 +109,12 @@ namespace NetCoreStack.WebSockets
                     Segments = descriptor.Segments,
                     KeepTime = DateTime.Now.AddMinutes(3)
                 });
+
+                return TaskCache.CompletedTask;
             }
         }
 
-        private async Task SendBinaryAsync(WebSocketTransport transport, byte[] chunkedBytes, bool endOfMessage, CancellationToken token)
+        private Task SendBinaryAsync(WebSocketTransport transport, byte[] chunkedBytes, bool endOfMessage)
         {
             if (transport == null)
             {
@@ -121,10 +125,40 @@ namespace NetCoreStack.WebSockets
 
             if (!transport.WebSocket.CloseStatus.HasValue)
             {
-                await transport.WebSocket.SendAsync(segments,
+                return transport.WebSocket.SendAsync(segments,
                    WebSocketMessageType.Binary,
                    endOfMessage,
-                   token);
+                   CancellationToken.None);
+            }
+
+            return TaskCache.CompletedTask;
+        }
+
+        private async Task SendConcurrentBinaryAsync(byte[] bytes)
+        {
+            using (var ms = new MemoryStream(bytes))
+            {
+                using (var br = new BinaryReader(ms))
+                {
+                    byte[] chunkedBytes = null;
+                    do
+                    {
+                        chunkedBytes = br.ReadBytes(ChunkSize);
+                        var endOfMessage = false;
+
+                        if (chunkedBytes.Length < ChunkSize)
+                            endOfMessage = true;
+
+                        foreach (var connection in Connections)
+                        {
+                            await SendBinaryAsync(connection.Value, chunkedBytes, endOfMessage);
+                        }
+
+                        if (endOfMessage)
+                            break;
+
+                    } while (chunkedBytes.Length <= ChunkSize);
+                }
             }
         }
 
@@ -197,10 +231,12 @@ namespace NetCoreStack.WebSockets
                 MessageType = WebSocketMessageType.Text
             };
 
+            _sendFrameAsyncLock.Wait();
             foreach (var connection in Connections)
             {
                 await SendAsync(connection.Value, descriptor);
             }
+            _sendFrameAsyncLock.Release();
         }
 
         public async Task BroadcastBinaryAsync(byte[] inputs, IDictionary<string, object> properties)
@@ -210,39 +246,17 @@ namespace NetCoreStack.WebSockets
                 return;
             }
             
-            var bytes = await PrepareBytesAsync(inputs, properties);
-
-            using (var ms = new MemoryStream(bytes))
-            {
-                using (var br = new BinaryReader(ms))
-                {
-                    byte[] chunkedBytes = null;
-                    do
-                    {
-                        chunkedBytes = br.ReadBytes(ChunkSize);
-                        var endOfMessage = false;
-
-                        if (chunkedBytes.Length < ChunkSize)
-                            endOfMessage = true;
-
-                        foreach (var connection in Connections)
-                        {
-                            await SendBinaryAsync(connection.Value, chunkedBytes, endOfMessage, CancellationToken.None);
-                        }
-
-                        if (endOfMessage)
-                            break;
-
-                    } while (chunkedBytes.Length <= ChunkSize);
-                }
-            }
+            _sendFrameAsyncLock.Wait();
+            var bytes = await PrepareFramesBytesAsync(inputs, properties);
+            await SendConcurrentBinaryAsync(bytes);
+            _sendFrameAsyncLock.Release();
         }
 
-        public async Task SendAsync(string connectionId, WebSocketMessageContext context)
+        public Task SendAsync(string connectionId, WebSocketMessageContext context)
         {
             if (!Connections.Any())
             {
-                return;
+                return TaskCache.CompletedTask;
             }
 
             WebSocketTransport transport = null;
@@ -259,7 +273,7 @@ namespace NetCoreStack.WebSockets
                 MessageType = WebSocketMessageType.Text
             };
 
-            await SendAsync(transport, descriptor);
+            return SendAsync(transport, descriptor);
         }
 
         public async Task SendBinaryAsync(string connectionId, byte[] input, IDictionary<string, object> properties)
@@ -275,7 +289,7 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentOutOfRangeException(nameof(transport));
             }
 
-            byte[] bytes = await PrepareBytesAsync(input, properties);
+            byte[] bytes = await PrepareFramesBytesAsync(input, properties);
 
             using (var ms = new MemoryStream(bytes))
             {

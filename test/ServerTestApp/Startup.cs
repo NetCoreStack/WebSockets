@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets;
 using Swashbuckle.Swagger.Model;
 using System.IO;
-using WebClientTestApp;
 
 namespace ServerTestApp
 {
@@ -41,14 +40,12 @@ namespace ServerTestApp
             });
 
             services.AddMemoryCache();
-
             services.AddDistributedRedisCache(options =>
             {
                 options.Configuration = "localhost";
                 options.InstanceName = "RedisInstance";
             });
-
-            services.AddSingleton<ICompressor, DefaultCompressor>();
+            
             services.AddTransient<IHandshakeStateTransport, MyHandshakeStateTransport>();
 
             // Add NetCoreStack Native Socket Services.
