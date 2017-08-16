@@ -31,17 +31,15 @@ namespace WebClientTestApp
             services.AddMemoryCache();
             services.AddSingleton<InMemoryCacheProvider>();
 
-            // Client WebSocket - DMZ to API side connections
-            services.AddProxyWebSockets(options => {
-                options.ConnectorName = $"TestWebApp-{Environment.MachineName}";
-                options.WebSocketHostAddress = "localhost:7803";
-                options.RegisterInvocator<CustomWebSocketCommandInvocator>(WebSocketCommands.All);
-            });
+            var connectorname = $"TestWebApp-{Environment.MachineName}";
 
             // WebSockets for Browsers - User Agent ( javascript clients )
-            services.AddNativeWebSockets(options => {
-                options.RegisterInvocator<AgentsWebSocketCommandInvocator>(WebSocketCommands.All);
-            });
+            services.AddNativeWebSockets<AgentsWebSocketCommandInvocator>();
+
+            // Client WebSocket - Proxy connections
+            services.AddProxyWebSockets()
+                .Register<CustomWebSocketCommandInvocator>(connectorname, "localhost:7803")
+                .Register<AnotherEndpointWebSocketCommandInvocator>(connectorname, "localhost:5000"); // Another endpoint registration, host address must be unique
 
             // Add framework services.
             services.AddMvc(options => {

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using NetCoreStack.WebSockets.Interfaces;
 using System;
@@ -20,8 +19,6 @@ namespace NetCoreStack.WebSockets.Internal
         public async Task Invoke(HttpContext httpContext, 
             IConnectionManager manager,
             IStreamCompressor compressor,
-            InvocatorRegistry invocatorRegistry,
-            IOptions<ServerSocketsOptions> options,
             ILoggerFactory loggerFactory)
         {
             if (httpContext.WebSockets.IsWebSocketRequest)

@@ -32,17 +32,16 @@ namespace WebClientTestApp2
             services.AddMemoryCache();
             services.AddSingleton<InMemoryCacheProvider>();
 
-            // Client WebSocket - DMZ to API side connections
-            services.AddProxyWebSockets(options => {
-                options.ConnectorName = $"TestApp2-{Environment.MachineName}";
-                options.WebSocketHostAddress = "localhost:7803";
-                options.RegisterInvocator<WebSocketCommandInvocator>(WebSocketCommands.All);
-            });
+            var connectorname = $"TestApp2-{Environment.MachineName}";
+
+            // WebSocket - Proxy
+            var builder = services.AddProxyWebSockets()
+                .Register<WebSocketCommandInvocator>(connectorname, "localhost:7803");
+
+            builder.Register<WebSocketCommandInvocator>(connectorname, "localhost:5000");
 
             // WebSockets for Browsers - User Agent ( javascript clients )
-            services.AddNativeWebSockets(options => {
-                options.RegisterInvocator<AgentsWebSocketCommandInvocator>(WebSocketCommands.All);
-            });
+            services.AddNativeWebSockets<AgentsWebSocketCommandInvocator>();
 
             services.AddMvc();
         }

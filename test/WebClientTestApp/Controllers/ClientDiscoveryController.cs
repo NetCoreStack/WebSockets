@@ -9,7 +9,7 @@ namespace WebClientTestApp.Controllers
     public class ClientDiscoveryController : Controller
     {
         private readonly IWebSocketConnector _connector;
-        public ClientDiscoveryController(IWebSocketConnector connector)
+        public ClientDiscoveryController(IWebSocketConnector<CustomWebSocketCommandInvocator> connector)
         {
             _connector = connector;
         }

@@ -8,12 +8,17 @@ namespace NetCoreStack.WebSockets.Internal
 {
     public class WebSocketReceiver
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly WebSocketReceiverContext _context;
         private readonly Action<WebSocketReceiverContext> _closeCallback;
         private readonly Action<string> _handshakeCallback;
 
-        public WebSocketReceiver(WebSocketReceiverContext context, Action<WebSocketReceiverContext> closeCallback, Action<string> handshakeCallback = null)
+        public WebSocketReceiver(IServiceProvider serviceProvider, 
+            WebSocketReceiverContext context, 
+            Action<WebSocketReceiverContext> closeCallback, 
+            Action<string> handshakeCallback = null)
         {
+            _serviceProvider = serviceProvider;
             _context = context;
             _closeCallback = closeCallback;
             _handshakeCallback = handshakeCallback;
@@ -36,11 +41,8 @@ namespace NetCoreStack.WebSockets.Internal
                             _handshakeCallback?.Invoke(_context.ConnectionId);
                         }
 
-                        var _invocators = _context.InvocatorRegistry.GetInvocators(context, _context.Options);
-                        foreach (var invoker in _invocators)
-                        {
-                            await invoker.InvokeAsync(context);
-                        }
+                        var invocator = _context.GetInvocator(_serviceProvider);
+                        invocator?.InvokeAsync(context);
                     }
                     catch (Exception ex)
                     {
@@ -74,11 +76,8 @@ namespace NetCoreStack.WebSockets.Internal
                     try
                     {
                         var context = await result.ToBinaryContextAsync(_context.Compressor, binaryResult);
-                        var _invocators = _context.InvocatorRegistry.GetInvocators(context, _context.Options);
-                        foreach (var invoker in _invocators)
-                        {
-                            await invoker.InvokeAsync(context);
-                        }
+                        var invocator = _context.GetInvocator(_serviceProvider);
+                        invocator?.InvokeAsync(context);
                     }
                     catch (Exception ex)
                     {

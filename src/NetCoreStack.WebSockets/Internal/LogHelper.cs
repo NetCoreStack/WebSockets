@@ -19,7 +19,7 @@ namespace NetCoreStack.WebSockets.Internal
 
             logger.Log(logLevel,
                 new EventId((int)WebSocketState.Aborted, nameof(WebSocketState.Aborted)),
-                context.Options,
+                context.InvocatorContext,
                 ex,
                 (msg, exception) => {
                     var values = new Dictionary<string, object>();

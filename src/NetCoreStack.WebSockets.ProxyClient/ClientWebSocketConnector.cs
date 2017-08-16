@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using NetCoreStack.WebSockets.Interfaces;
 using NetCoreStack.WebSockets.Internal;
 using System;
@@ -10,13 +9,13 @@ using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets.ProxyClient
 {
-    internal class ClientWebSocketConnector : IWebSocketConnector
+    public abstract class ClientWebSocketConnector : IWebSocketConnector
     {
         private string _connectionId;
         private ClientWebSocket _webSocket;
+        private readonly IServiceProvider _serviceProvider;
         private readonly IStreamCompressor _compressor;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly InvocatorRegistry _invocatorRegistry;
 
         public string ConnectionId
         {
@@ -37,25 +36,23 @@ namespace NetCoreStack.WebSockets.ProxyClient
             }
         }
 
-        public ProxyOptions Options { get; }
-
-        public ClientWebSocketConnector(IOptions<ProxyOptions> options, 
-            IStreamCompressor compressor,
-            InvocatorRegistry invocatorRegistry,
+        public ClientWebSocketConnector(IServiceProvider serviceProvider, 
+            IStreamCompressor compressor, 
             ILoggerFactory loggerFactory)
         {
+            _serviceProvider = serviceProvider;
             _compressor = compressor;
-            _invocatorRegistry = invocatorRegistry;
             _loggerFactory = loggerFactory;
-            Options = options.Value;
         }
+
+        protected abstract InvocatorContext CreateInvocatorContext();
 
         private async Task TryConnectAsync(CancellationTokenSource cancellationTokenSource = null)
         {
-            var name = Options.ConnectorName;
-            var uri = new Uri($"ws://{Options.WebSocketHostAddress}");
+            var invocatorContext = CreateInvocatorContext();
+            var uri = new Uri($"ws://{invocatorContext.HostAddress}");
             _webSocket = new ClientWebSocket();
-            _webSocket.Options.SetRequestHeader(SocketsConstants.ConnectorName, Options.ConnectorName);
+            _webSocket.Options.SetRequestHeader(SocketsConstants.ConnectorName, invocatorContext.ConnectorName);
             try
             {
                 CancellationToken token = cancellationTokenSource != null ? cancellationTokenSource.Token : CancellationToken.None;
@@ -63,18 +60,18 @@ namespace NetCoreStack.WebSockets.ProxyClient
             }
             catch (Exception ex)
             {
-                ProxyLogHelper.Log(_loggerFactory, Options, "Error", ex);
+                ProxyLogHelper.Log(_loggerFactory, invocatorContext, "Error", ex);
                 return;
             }
+
             var receiverContext = new WebSocketReceiverContext
             {
                 Compressor = _compressor,
-                InvocatorRegistry = _invocatorRegistry,
+                InvocatorContext = invocatorContext,
                 LoggerFactory = _loggerFactory,
-                Options = Options,
                 WebSocket = _webSocket
             };
-            var receiver = new WebSocketReceiver(receiverContext, Close, (connectionId) => {
+            var receiver = new WebSocketReceiver(_serviceProvider, receiverContext, Close, (connectionId) => {
                 _connectionId = connectionId;
             });
             await receiver.ReceiveAsync();
@@ -93,7 +90,8 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 }
                 catch (Exception ex)
                 {
-                    ProxyLogHelper.Log(_loggerFactory, Options, "Error", ex);
+                    var invocatorContext = CreateInvocatorContext();
+                    ProxyLogHelper.Log(_loggerFactory, invocatorContext, "Error", ex);
                 }
 
                 if (WebSocketState == WebSocketState.Open)

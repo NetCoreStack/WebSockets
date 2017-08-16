@@ -60,21 +60,20 @@ namespace ServerTestApp.Controllers
         [HttpPost(nameof(SendBinaryAsync))]
         public async Task<IActionResult> SendBinaryAsync()
         {
-            foreach (KeyValuePair<string, CacheItemDescriptor> entry in CacheHelper.CacheKeys)
+            try
             {
-                try
+                foreach (KeyValuePair<string, CacheItemDescriptor> entry in CacheHelper.CacheKeys)
                 {
-                    var key = entry.Key;
-                    var routeValueDictionary = new RouteValueDictionary(new { Key = key });
-                    var bytes = _distrubutedCache.Get(key);
+                    var routeValueDictionary = new RouteValueDictionary(new { Key = entry.Key });
+                    var bytes = _distrubutedCache.Get(entry.Key);
                     await _connectionManager.BroadcastBinaryAsync(bytes, routeValueDictionary);
                 }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
             }
-            
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
             return Ok();
         }
 

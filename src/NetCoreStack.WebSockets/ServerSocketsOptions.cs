@@ -1,11 +1,16 @@
-﻿namespace NetCoreStack.WebSockets
+﻿using System;
+
+namespace NetCoreStack.WebSockets
 {
-    public class ServerSocketsOptions : SocketsOptions
+    public class ServerSocketsOptions<TInvocator> : SocketsOptions<TInvocator> where TInvocator : IWebSocketCommandInvocator
     {
-        public void RegisterInvocator<TInvocator>(WebSocketCommands commands) where TInvocator : IServerWebSocketCommandInvocator
+        public override string ConnectorKey()
         {
-            var invocatorType = typeof(TInvocator);
-            Registry(invocatorType, commands);
+#if NET451
+            return Environment.MachineName;
+#else
+            return Environment.GetEnvironmentVariable("COMPUTERNAME");
+#endif
         }
     }
 }

@@ -49,9 +49,7 @@ namespace ServerTestApp
             services.AddTransient<IHandshakeStateTransport, MyHandshakeStateTransport>();
 
             // Add NetCoreStack Native Socket Services.
-            services.AddNativeWebSockets(options => {
-                options.RegisterInvocator<ServerWebSocketCommandInvocator>(WebSocketCommands.All);
-            });
+            services.AddNativeWebSockets<ServerWebSocketCommandInvocator>();
             
             // Add framework services.
             services.AddMvc();

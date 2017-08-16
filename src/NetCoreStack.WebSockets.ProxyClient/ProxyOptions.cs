@@ -1,6 +1,6 @@
 ﻿namespace NetCoreStack.WebSockets.ProxyClient
 {
-    public class ProxyOptions : SocketsOptions
+    public class ProxyOptions<TInvocator> : SocketsOptions<TInvocator> where TInvocator : IClientWebSocketCommandInvocator
     {
         public string ConnectorName { get; set; }
         public string WebSocketHostAddress { get; set; }
@@ -10,10 +10,9 @@
             ConnectorName = "";
         }
 
-        public void RegisterInvocator<TInvocator>(WebSocketCommands commands) where TInvocator : IClientWebSocketCommandInvocator
+        public override string ConnectorKey()
         {
-            var invocatorType = typeof(TInvocator);
-            Registry(invocatorType, commands);
+            return $"{ConnectorName}|{WebSocketHostAddress}|{InvocatorTypeHashCode}";
         }
     }
 }

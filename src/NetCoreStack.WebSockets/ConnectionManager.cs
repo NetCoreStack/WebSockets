@@ -13,6 +13,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using static NetCoreStack.WebSockets.Internal.SocketsConstants;
 
 namespace NetCoreStack.WebSockets
@@ -20,8 +21,7 @@ namespace NetCoreStack.WebSockets
     public class ConnectionManager : IConnectionManager
     {
         private readonly SemaphoreSlim _sendFrameAsyncLock = new SemaphoreSlim(1, 1);
-        private readonly InvocatorRegistry _invocatorRegistry;
-        private readonly ServerSocketsOptions _options;
+        private readonly IServiceProvider _serviceProvider;
         private readonly IHandshakeStateTransport _initState;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IStreamCompressor _compressor;
@@ -29,17 +29,15 @@ namespace NetCoreStack.WebSockets
 
         public ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
 
-        public ConnectionManager(IStreamCompressor compressor,
+        public ConnectionManager(IServiceProvider serviceProvider,
+            IStreamCompressor compressor,
             TransportLifetimeManager lifetimeManager,
-            InvocatorRegistry invocatorRegistry,
-            IOptions<ServerSocketsOptions> options,
             IHandshakeStateTransport initState,
             ILoggerFactory loggerFactory)
         {
+            _serviceProvider = serviceProvider;
             _compressor = compressor;
             _lifetimeManager = lifetimeManager;
-            _invocatorRegistry = invocatorRegistry;
-            _options = options.Value;
             _initState = initState;
             _loggerFactory = loggerFactory;            
             Connections = new ConcurrentDictionary<string, WebSocketTransport>(StringComparer.OrdinalIgnoreCase);
@@ -168,9 +166,7 @@ namespace NetCoreStack.WebSockets
             {
                 Compressor = _compressor,
                 ConnectionId = connectionId,
-                InvocatorRegistry = _invocatorRegistry,
                 LoggerFactory = _loggerFactory,
-                Options = _options,
                 WebSocket = webSocket
             };
             
@@ -202,7 +198,7 @@ namespace NetCoreStack.WebSockets
                 await SendAsync(connectionId, context);
             }
 
-            var receiver = new WebSocketReceiver(receiverContext, CloseConnection);
+            var receiver = new WebSocketReceiver(_serviceProvider, receiverContext, CloseConnection);
             await receiver.ReceiveAsync();
         }
 

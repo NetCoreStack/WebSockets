@@ -9,24 +9,21 @@ namespace NetCoreStack.WebSockets
 {
     public static class SocketServiceCollectionExtensions
     {
-        public static void AddNativeWebSockets(this IServiceCollection services, Action<ServerSocketsOptions> setup)
+        public static void AddNativeWebSockets<TInvocator>(this IServiceCollection services)
+            where TInvocator : IServerWebSocketCommandInvocator
         {
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
 
-            if (setup == null)
-            {
-                throw new ArgumentNullException(nameof(setup));
-            }
-
             services.AddSingleton<TransportLifetimeManager>();
             services.TryAdd(ServiceDescriptor.Singleton<ILoggerFactory, LoggerFactory>());
             services.TryAdd(ServiceDescriptor.Singleton<IStreamCompressor, GZipStreamCompressor>());
             services.TryAdd(ServiceDescriptor.Transient<IHandshakeStateTransport, DefaultHandshakeStateTransport>());
+
             services.AddSingleton<IConnectionManager, ConnectionManager>();
-            InvocatorRegistryHelper.Register(services, setup);
+            services.AddTransient(typeof(IServerWebSocketCommandInvocator), typeof(TInvocator));
         }
     }
 }

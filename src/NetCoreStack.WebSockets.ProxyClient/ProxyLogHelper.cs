@@ -9,25 +9,25 @@ namespace NetCoreStack.WebSockets.Internal
 {
     public static class ProxyLogHelper
     {
-        public static void Log(ILoggerFactory loggerFactory, ProxyOptions options, string message, Exception ex = null)
+        public static void Log(ILoggerFactory loggerFactory, InvocatorContext context, string message, Exception ex = null)
         {
             LogLevel logLevel = LogLevel.Debug;
             if (ex != null)
                 logLevel = LogLevel.Error;
 
-            var logger = loggerFactory.CreateLogger<ClientWebSocketConnector>();
+            var logger = loggerFactory.CreateLogger<IWebSocketConnector>();
             var content = $"{message}=={ex?.Message}";
 
             logger.Log(logLevel,
                 new EventId((int)WebSocketState.Aborted, nameof(WebSocketState.Aborted)),
-                options,
+                context,
                 ex,
                 (msg, exception) => {
 
                     var values = new Dictionary<string, object>();
                     values.Add("Message", content);
-                    values.Add(nameof(options.WebSocketHostAddress), options.WebSocketHostAddress);
-                    values.Add(nameof(options.ConnectorName), options.ConnectorName);
+                    values.Add(nameof(context.HostAddress), context.HostAddress);
+                    values.Add(nameof(context.ConnectorName), context.ConnectorName);
                     return JsonConvert.SerializeObject(values);
                 });
         }

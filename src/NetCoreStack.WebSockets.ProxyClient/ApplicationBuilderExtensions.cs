@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,17 +10,22 @@ namespace NetCoreStack.WebSockets.ProxyClient
 {
     public static class ApplicationBuilderExtensions
     {
+        private static void ThrowIfServiceNotRegistered(IServiceProvider applicationServices)
+        {
+            var service = applicationServices.GetService<ProxyClientMarkerService>();
+            if (service == null)
+                throw new InvalidOperationException(string.Format("Required services are not registered - are you missing a call to AddProxyWebSockets?"));
+        }
+
         public static IApplicationBuilder UseProxyWebSockets(this IApplicationBuilder app, CancellationTokenSource cancellationTokenSource = null)
         {
+            ThrowIfServiceNotRegistered(app.ApplicationServices);
             var appLifeTime = app.ApplicationServices.GetService<IApplicationLifetime>();
-            var loggerFactory = app.ApplicationServices.GetService<ILoggerFactory>();
-            var logger = loggerFactory.CreateLogger(nameof(ClientWebSocketConnector));
-            var webSocketConnector = app.ApplicationServices.GetService<IWebSocketConnector>();
-
-            if (webSocketConnector != null && appLifeTime != null)
+            IList<IWebSocketConnector> connectors = InvocatorFactory.GetConnectors(app.ApplicationServices);
+            foreach (var connector in connectors)
             {
-                appLifeTime.ApplicationStopping.Register(OnShutdown, webSocketConnector);
-                Task.Run(async () => await webSocketConnector.ConnectAsync(cancellationTokenSource));
+                appLifeTime.ApplicationStopping.Register(OnShutdown, connector);
+                Task.Run(async () => await connector.ConnectAsync(cancellationTokenSource));
             }
 
             return app;

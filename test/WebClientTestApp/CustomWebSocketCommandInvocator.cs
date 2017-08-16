@@ -32,6 +32,12 @@ namespace WebClientTestApp
         {
             await Task.CompletedTask;
 
+            if (context.MessageType == WebSocketMessageType.Text)
+            {
+                await _connectionManager.BroadcastAsync(context);
+                return;
+            }
+
             if (context.MessageType == WebSocketMessageType.Binary)
             {
                 var stateDictionary = context.Header as Dictionary<string, object>;

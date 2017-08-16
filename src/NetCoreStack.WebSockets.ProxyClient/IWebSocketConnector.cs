@@ -8,9 +8,13 @@ namespace NetCoreStack.WebSockets.ProxyClient
     {
         string ConnectionId { get; }
         WebSocketState WebSocketState { get; }
-        ProxyOptions Options { get; }
         Task ConnectAsync(CancellationTokenSource cancellationTokenSource);
         Task SendAsync(WebSocketMessageContext context);
         Task SendBinaryAsync(byte[] bytes);
+    }
+
+    public interface IWebSocketConnector<THandler> : IWebSocketConnector where THandler : IClientWebSocketCommandInvocator
+    {
+        ProxyOptions<THandler> Options { get; }
     }
 }

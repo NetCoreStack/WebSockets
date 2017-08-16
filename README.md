@@ -1,7 +1,6 @@
-### Cross-Platform WebSockets From Browsering (DMZ) Zone to API - Service (Backend) Zone
+### Cross-Platform WebSockets Proxy
 
-This project is demonstrating bidirectional connection and data transfer from low level layer (secure zone) to 
-Browsering - DMZ (Public) zone via .NET Core WebSockets.
+This project is demonstrating bidirectional connection and data transfer via .NET Core WebSockets.
 
 You can use it on your API - Service side to communicate among your trusted Backend API consumer 
 Clients (for example MVC Web Application Hosting) and at the same time may 
@@ -15,7 +14,7 @@ operation with same interface.
 
 #### Startup ConfigureServices
 ```csharp
-// Add NetCoreStack Native Socket Services.
+// Add socket services.
 services.AddNativeWebSockets(options => {
     options.RegisterInvocator<ServerWebSocketCommandInvocator>(WebSocketCommands.All);
 });
@@ -26,7 +25,7 @@ services.AddNativeWebSockets(options => {
  app.UseNativeWebSockets();
 ```
 
-#### Controller with Dependency Injection
+#### Controller with dependency injection
 ```csharp
 public MyController(IConnectionManager connectionManager)
 {
@@ -44,29 +43,28 @@ public async Task<IActionResult> SendAsync([FromBody]SimpleModel model)
 }
 ```
 
-### Usage for Trusted Clients or Browsering (DMZ) Layer
+### Clients
 #### Startup ConfigureServices
 ```csharp
-// Client WebSocket - DMZ to API side connections
-services.AddProxyWebSockets(options => {
-    options.WebSocketHostAddress = "localhost:7803";
-    options.RegisterInvocator<CustomWebSocketCommandInvocator>(WebSocketCommands.All);
-});
-
-// WebSockets for Browsers - User Agent ( javascript clients )
+// WebSockets for Browsers
 services.AddNativeWebSockets(options => {
     options.RegisterInvocator<AgentsWebSocketCommandInvocator>(WebSocketCommands.All);
 });
+
+// Client WebSocket - Proxy connections
+services.AddProxyWebSockets()
+    .Register<CustomWebSocketCommandInvocator>(connectorname, "localhost:7803")
+    .Register<AnotherEndpointWebSocketCommandInvocator>(connectorname, "localhost:5000"); // Another endpoint registration, host address must be unique
 
 // Add MVC framework services.
 services.AddMvc();
 ```
 #### Startup Configure
 ```csharp
-// Proxy (Domain App) Client WebSocket - DMZ to API side connections
+// Client WebSocket - Proxy connections
 app.UseProxyWebSockets();
 
-// User Agent WebSockets for Browsers
+// WebSockets for Browsers
 app.UseNativeWebSockets();
 
 // Use MVC
@@ -86,16 +84,35 @@ public class CustomWebSocketCommandInvocator : IClientWebSocketCommandInvocator
 
     public Task InvokeAsync(WebSocketMessageContext context)
     {
-        // Sending incoming data from Backend zone to the Clients (Browsers)
+        // Sending incoming data from backend to the clients (Browsers)
         _connectionManager.BroadcastAsync(context);
         return Task.CompletedTask;
     }
 }
 ```
 
+```csharp
+public class ClientDiscoveryController : Controller
+{
+    private readonly IWebSocketConnector _connector;
+    public ClientDiscoveryController(IWebSocketConnector<CustomWebSocketCommandInvocator> connector)
+    {
+        _connector = connector;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> KeepAlive()
+    {
+        await _connector.SendAsync(new WebSocketMessageContext
+        {
+            Command = WebSocketCommands.DataSend,
+            Value = new { Id = 1, Name = "Hello World!", DateTime = DateTime.Now }
+        });
+
+        return Ok();
+    }
+}
+```
+
 ### Prerequisites
 > [ASP.NET Core](https://github.com/aspnet/Home)
-
-### Installation
-
-> dotnet restore

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using NetCoreStack.WebSockets;
 using NetCoreStack.WebSockets.ProxyClient;
 using NetCoreStack.WebSockets.ProxyClient.Console;
 using System;
@@ -19,12 +18,11 @@ namespace ConsoleAppProxyClient
         public static void Main(string[] args)
         {
             var services = new ServiceCollection();
-            services.AddProxyWebSockets(options =>
-            {
-                options.ConnectorName = $"ConsoleApp-{Environment.MachineName}";
-                options.WebSocketHostAddress = "localhost:7803";
-                options.RegisterInvocator<DataStreamingInvocator>(WebSocketCommands.All);
-            });
+
+            var connectorName = $"ConsoleApp-{Environment.MachineName}";
+
+            services.AddProxyWebSockets()
+                .Register<DataStreamingInvocator>(connectorName, "localhost:7803");
 
             _resolver = services.BuildServiceProvider();
 

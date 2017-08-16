@@ -1,31 +1,19 @@
-﻿using NetCoreStack.WebSockets.Internal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 
 namespace NetCoreStack.WebSockets
 {
-    public class SocketsOptions
+    public abstract class SocketsOptions<TInvocator> where TInvocator : IWebSocketCommandInvocator
     {
-        internal readonly List<WebSocketCommandMap> Map;
+        public Type Invocator { get; }
 
-        public List<Type> Invocators { get; }
+        public int InvocatorTypeHashCode { get; }
 
         public SocketsOptions()
         {
-            Map = new List<WebSocketCommandMap>();
-            Invocators = new List<Type>();
+            Invocator = typeof(TInvocator);
+            InvocatorTypeHashCode = Invocator.GetHashCode();
         }
 
-        protected void Registry(Type invocatorType, WebSocketCommands commands)
-        {
-            Invocators.Add(invocatorType);
-            var values = commands.GetUniqueFlags().OfType<WebSocketCommands>().ToList();
-            foreach (var value in values)
-            {
-                var commandMap = new WebSocketCommandMap(value, invocatorType);
-                Map.Add(commandMap);
-            }
-        }
+        public abstract string ConnectorKey();
     }
 }
