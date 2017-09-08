@@ -20,7 +20,7 @@ namespace WebClientTestApp.Controllers
             await _connector.SendAsync(new WebSocketMessageContext
             {
                 Command = WebSocketCommands.DataSend,
-                Value = new { Id = 1, Name = "Jhon", DateTime = DateTime.Now }
+                Value = new { Id = 1, Name = "Hello World!", DateTime = DateTime.Now }
             });
 
             return Ok();
