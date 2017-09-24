@@ -56,7 +56,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             try
             {
                 CancellationToken token = cancellationTokenSource != null ? cancellationTokenSource.Token : CancellationToken.None;
-                await _webSocket.ConnectAsync(uri, CancellationToken.None);
+                await _webSocket.ConnectAsync(uri, token);
             }
             catch (Exception ex)
             {
@@ -84,15 +84,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
 
             while (!cancellationTokenSource.IsCancellationRequested)
             {
-                try
-                {
-                    await TryConnectAsync(cancellationTokenSource);
-                }
-                catch (Exception ex)
-                {
-                    var invocatorContext = CreateInvocatorContext();
-                    ProxyLogHelper.Log(_loggerFactory, invocatorContext, "Error", ex);
-                }
+                await TryConnectAsync(cancellationTokenSource);
 
                 if (WebSocketState == WebSocketState.Open)
                 {
