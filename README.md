@@ -14,10 +14,8 @@ operation with same interface.
 
 #### Startup ConfigureServices
 ```csharp
-// Add socket services.
-services.AddNativeWebSockets(options => {
-    options.RegisterInvocator<ServerWebSocketCommandInvocator>(WebSocketCommands.All);
-});
+// Add NetCoreStack Native Socket Services.
+services.AddNativeWebSockets<ServerWebSocketCommandInvocator>();
 ```
 
 #### Startup Configure
