@@ -2,13 +2,15 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets;
+using NetCoreStack.WebSockets.Internal;
 using ServerTestApp.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ServerTestApp.Controllers
@@ -89,6 +91,18 @@ namespace ServerTestApp.Controllers
                }).OrderBy(o => o.name).ToList();
 
             return Json(connections);
+        }
+
+        [HttpGet(nameof(CloseConnection))]
+        public async Task<IActionResult> CloseConnection([FromQuery]string connectionId)
+        {
+            if(_connectionManager.Connections.TryGetValue(connectionId, out WebSocketTransport webSocketTransport))
+            {
+                await webSocketTransport.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Server close", CancellationToken.None);
+                return Json(new { status = 1 });
+            }
+
+            return Json(new { status = 0 });
         }
     }
 }

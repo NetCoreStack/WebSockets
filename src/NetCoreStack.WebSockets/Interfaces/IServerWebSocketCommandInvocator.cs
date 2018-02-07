@@ -1,6 +1,4 @@
-﻿using NetCoreStack.WebSockets.Internal;
-
-namespace NetCoreStack.WebSockets
+﻿namespace NetCoreStack.WebSockets
 {
     public interface IServerWebSocketCommandInvocator : IWebSocketCommandInvocator
     {

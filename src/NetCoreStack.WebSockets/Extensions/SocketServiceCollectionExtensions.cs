@@ -16,8 +16,7 @@ namespace NetCoreStack.WebSockets
             {
                 throw new ArgumentNullException(nameof(services));
             }
-
-            services.AddSingleton<TransportLifetimeManager>();
+            
             services.TryAdd(ServiceDescriptor.Singleton<ILoggerFactory, LoggerFactory>());
             services.TryAdd(ServiceDescriptor.Singleton<IStreamCompressor, GZipStreamCompressor>());
             services.TryAdd(ServiceDescriptor.Transient<IHandshakeStateTransport, DefaultHandshakeStateTransport>());

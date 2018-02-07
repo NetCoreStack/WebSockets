@@ -47,7 +47,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
 
         protected abstract InvocatorContext CreateInvocatorContext();
 
-        private async Task TryConnectAsync(CancellationTokenSource cancellationTokenSource = null)
+        private async Task<WebSocketReceiver> TryConnectAsync(CancellationTokenSource cancellationTokenSource = null)
         {
             var invocatorContext = CreateInvocatorContext();
             var uri = new Uri($"ws://{invocatorContext.HostAddress}");
@@ -61,7 +61,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             catch (Exception ex)
             {
                 ProxyLogHelper.Log(_loggerFactory, invocatorContext, "Error", ex);
-                return;
+                return null;
             }
 
             var receiverContext = new WebSocketReceiverContext
@@ -71,10 +71,12 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 LoggerFactory = _loggerFactory,
                 WebSocket = _webSocket
             };
+
             var receiver = new WebSocketReceiver(_serviceProvider, receiverContext, Close, (connectionId) => {
                 _connectionId = connectionId;
             });
-            await receiver.ReceiveAsync();
+
+            return receiver;
         }
 
         public async Task ConnectAsync(CancellationTokenSource cancellationTokenSource = null)
@@ -82,14 +84,22 @@ namespace NetCoreStack.WebSockets.ProxyClient
             if (cancellationTokenSource == null)
                 cancellationTokenSource = new CancellationTokenSource();
 
+            WebSocketReceiver receiver = null;
             while (!cancellationTokenSource.IsCancellationRequested)
             {
-                await TryConnectAsync(cancellationTokenSource);
-
-                if (WebSocketState == WebSocketState.Open)
+                receiver = await TryConnectAsync(cancellationTokenSource);
+                if (receiver != null && WebSocketState == WebSocketState.Open)
                 {
                     break;
                 }
+            }
+
+            await receiver.ReceiveAsync();
+            
+            // Handshake down try re-connect
+            if (_webSocket.CloseStatus.HasValue)
+            {
+                await ConnectAsync(cancellationTokenSource);
             }
         }
 
@@ -105,10 +115,14 @@ namespace NetCoreStack.WebSockets.ProxyClient
             {
                 var id = connectionId as string;
                 if (string.IsNullOrEmpty(id))
+                {
                     throw new InvalidOperationException(nameof(connectionId));
+                }
             }
             else
+            {
                 context.Header.Add(SocketsConstants.ConnectionId, ConnectionId);
+            }
 
             return context.ToSegment();
         }
@@ -135,9 +149,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
 
         internal void Close(string statusDescription)
         {
-            _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, 
-                statusDescription, 
-                CancellationToken.None);
+            _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, statusDescription, CancellationToken.None);
         }
     }
 }

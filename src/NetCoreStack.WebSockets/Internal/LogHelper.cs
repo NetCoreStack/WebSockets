@@ -17,9 +17,14 @@ namespace NetCoreStack.WebSockets.Internal
             var logger = context.LoggerFactory.CreateLogger<WebSocketReceiver>();
             var content = $"{message}=={ex?.Message}";
 
+            object state = new
+            {
+                context.ConnectionId
+            };
+
             logger.Log(logLevel,
                 new EventId((int)WebSocketState.Aborted, nameof(WebSocketState.Aborted)),
-                context.InvocatorContext,
+                state,
                 ex,
                 (msg, exception) => {
                     var values = new Dictionary<string, object>();

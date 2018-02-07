@@ -10,7 +10,7 @@ namespace NetCoreStack.WebSockets.Internal
         public WebSocketMessageType MessageType { get; set; }
         public bool EndOfMessage { get; set; }
         public bool IsQueue { get; set; }
-        public CancellationToken CancellationToken { get; set; }
+        public CancellationToken CancellationToken { get; }
 
         public WebSocketMessageDescriptor()
         {

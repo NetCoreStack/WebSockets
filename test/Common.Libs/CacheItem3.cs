@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Common.Libs
+﻿namespace Common.Libs
 {
     public class CacheItem3
     {

@@ -137,6 +137,7 @@
                     vm.logInfo("Connecting...");
                     socket = new ReconnectingWebSocket(vm.connectionUrl());
                     socket.onopen = function (event) {
+                        console.log("OnOpen event: ", event);
                         vm.connectionState(state.connected);
                         vm.logInfo("Connection opened");
                     };
@@ -145,6 +146,7 @@
                         vm.logInfo('Connection closed. Code: ' + event.code + '. Reason: ' + event.reason + '');
                     };
                     socket.onerror = function () {
+                        console.log("socket onerror");
                         switch (socket.readyState) {
                             case WebSocket.CLOSED:
                                 vm.connectionState(state.connect);
@@ -161,7 +163,7 @@
 
                             var context = JSON.parse(event.data);
 
-                            console.log(vm.connectionId());
+                            console.log("ConnectionId: ", vm.connectionId());
                             if (context && context.Command == WebSocketCommands.Handshake) {
                                 vm.connectionId(context.Value);
                                 Cookies.set('connectionId', context.Value);

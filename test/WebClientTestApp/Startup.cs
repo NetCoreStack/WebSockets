@@ -38,8 +38,8 @@ namespace WebClientTestApp
 
             // Client WebSocket - Proxy connections
             services.AddProxyWebSockets()
-                .Register<CustomWebSocketCommandInvocator>(connectorname, "localhost:7803")
-                .Register<AnotherEndpointWebSocketCommandInvocator>(connectorname, "localhost:5000"); // Another endpoint registration, host address must be unique
+                .Register<CustomWebSocketCommandInvocator>(connectorname, "localhost:7803");
+                // .Register<AnotherEndpointWebSocketCommandInvocator>(connectorname, "localhost:5000"); // Another endpoint registration, host address must be unique
 
             // Add framework services.
             services.AddMvc(options => {

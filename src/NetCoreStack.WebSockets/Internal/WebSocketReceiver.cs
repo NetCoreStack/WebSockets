@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
@@ -87,7 +88,7 @@ namespace NetCoreStack.WebSockets.Internal
                 }
             }
             await _context.WebSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-            _closeCallback.Invoke(_context);
+            _closeCallback?.Invoke(_context);
         }
 
         public async Task ReceiveAsync()

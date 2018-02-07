@@ -25,7 +25,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             foreach (var connector in connectors)
             {
                 appLifeTime.ApplicationStopping.Register(OnShutdown, connector);
-                Task.Run(async () => await connector.ConnectAsync(cancellationTokenSource));
+                Task.Factory.StartNew(async () => await connector.ConnectAsync(cancellationTokenSource), TaskCreationOptions.LongRunning);
             }
 
             return app;
