@@ -11,10 +11,11 @@ namespace NetCoreStack.WebSockets.ProxyClient
         Task ConnectAsync(CancellationTokenSource cancellationTokenSource);
         Task SendAsync(WebSocketMessageContext context);
         Task SendBinaryAsync(byte[] bytes);
+        InvocatorContext GetInvocatorContext();
     }
 
-    public interface IWebSocketConnector<THandler> : IWebSocketConnector where THandler : IClientWebSocketCommandInvocator
+    public interface IWebSocketConnector<TInvocator> : IWebSocketConnector where TInvocator : IClientWebSocketCommandInvocator
     {
-        ProxyOptions<THandler> Options { get; }
+        ProxyOptions<TInvocator> Options { get; }
     }
 }

@@ -16,7 +16,9 @@ namespace WebClientTestApp
         private readonly ILogger _logger;
         private readonly InMemoryCacheProvider _cacheProvider;
 
-        public CustomWebSocketCommandInvocator(IConnectionManager connectionManager, InMemoryCacheProvider cacheProvider,  ILogger<CustomWebSocketCommandInvocator> logger)
+        public CustomWebSocketCommandInvocator(IConnectionManager connectionManager, 
+            InMemoryCacheProvider cacheProvider, 
+            ILogger<CustomWebSocketCommandInvocator> logger)
         {
             _connectionManager = connectionManager;
             _cacheProvider = cacheProvider;

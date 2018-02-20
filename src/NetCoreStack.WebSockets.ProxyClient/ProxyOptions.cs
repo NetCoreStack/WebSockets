@@ -9,10 +9,5 @@
         {
             ConnectorName = "";
         }
-
-        public override string ConnectorKey()
-        {
-            return $"{ConnectorName}|{WebSocketHostAddress}|{InvocatorTypeHashCode}";
-        }
     }
 }

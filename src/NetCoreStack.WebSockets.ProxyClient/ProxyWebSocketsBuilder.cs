@@ -1,18 +1,23 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
+using Microsoft.Extensions.Options;
 
 namespace NetCoreStack.WebSockets.ProxyClient
 {
     public class ProxyWebSocketsBuilder
     {
-        private IDictionary<string, ConnectorHostPair> _invocators;
         private readonly IServiceCollection _services;
 
         public ProxyWebSocketsBuilder(IServiceCollection services)
         {
-            _invocators = new Dictionary<string, ConnectorHostPair>(StringComparer.OrdinalIgnoreCase);
             _services = services;
+        }
+
+        private void RegisterInternal<TInvocator>()
+            where TInvocator : IClientWebSocketCommandInvocator
+        {
+            var invocatorType = typeof(TInvocator);
+            InvocatorFactory.Invocators.Add(invocatorType);
+            _services.AddSingleton<IWebSocketConnector<TInvocator>, ClientWebSocketConnectorOfT<TInvocator>>();
         }
 
         /// <summary>
@@ -25,24 +30,32 @@ namespace NetCoreStack.WebSockets.ProxyClient
         public ProxyWebSocketsBuilder Register<TInvocator>(string connectorName, string hostAddress) 
             where TInvocator : IClientWebSocketCommandInvocator
         {
-            var connectorHostPair = new ConnectorHostPair(connectorName, hostAddress, typeof(TInvocator));
-            var key = connectorHostPair.Key;
+            var invocatorType = typeof(TInvocator);
+            InvocatorsHelper.EnsureHostPair(invocatorType, connectorName, hostAddress);
 
-            if(_invocators.TryGetValue(key, out ConnectorHostPair value))
-            {
-                throw new InvalidOperationException($"\"{connectorName}\" is already registered with same Host and Invocator");
-            }
+            RegisterInternal<TInvocator>();
 
-            _invocators.Add(key, connectorHostPair);
-            _services.AddSingleton<IWebSocketConnector<TInvocator>, ClientWebSocketConnectorOfInvocator<TInvocator>>();
             var proxyOptions = new ProxyOptions<TInvocator>
             {
                 ConnectorName = connectorName,
                 WebSocketHostAddress = hostAddress
             };
 
-            InvocatorRegistryHelper.Register<TInvocator>(_services, proxyOptions);
+            _services.AddSingleton(Options.Create(proxyOptions));
+            _services.AddSingleton<IClientInvocatorContextFactory<TInvocator>, DefaultClientInvocatorContextFactory<TInvocator>>();
             return this;
-        }        
+        }   
+
+        public ProxyWebSocketsBuilder Register<TInvocator, TContextFactory>() 
+            where TInvocator : IClientWebSocketCommandInvocator
+            where TContextFactory : IClientInvocatorContextFactory<TInvocator>
+        {
+
+            RegisterInternal<TInvocator>();
+
+            _services.AddSingleton(typeof(IClientInvocatorContextFactory<TInvocator>), typeof(TContextFactory));
+            
+            return this;
+        }
     }
 }

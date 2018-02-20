@@ -7,39 +7,34 @@ using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets;
 using NetCoreStack.WebSockets.ProxyClient;
 using System;
-using System.IO;
 
 namespace WebClientTestApp
 {
     public class Startup
     {
-        public Startup(IHostingEnvironment env)
+        public Startup(IConfiguration configuration)
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                .AddEnvironmentVariables();
-
-            Configuration = builder.Build();
+            Configuration = configuration;
         }
 
-        public IConfigurationRoot Configuration { get; }
+        public IConfiguration Configuration { get; }
         
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMemoryCache();
             services.AddSingleton<InMemoryCacheProvider>();
 
-            var connectorname = $"TestWebApp-{Environment.MachineName}";
-
             // WebSockets for Browsers - User Agent ( javascript clients )
             services.AddNativeWebSockets<AgentsWebSocketCommandInvocator>();
 
             // Client WebSocket - Proxy connections
-            services.AddProxyWebSockets()
-                .Register<CustomWebSocketCommandInvocator>(connectorname, "localhost:7803");
-                // .Register<AnotherEndpointWebSocketCommandInvocator>(connectorname, "localhost:5000"); // Another endpoint registration, host address must be unique
+            var builder = services.AddProxyWebSockets();
+
+            var connectorname = $"TestWebApp-{Environment.MachineName}";
+            builder.Register<CustomWebSocketCommandInvocator>(connectorname, "localhost:7803");
+
+            // Runtime context factory
+            builder.Register<AnotherEndpointWebSocketCommandInvocator, CustomInvocatorContextFactory>();
 
             // Add framework services.
             services.AddMvc(options => {
@@ -75,22 +70,6 @@ namespace WebClientTestApp
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
-        }
-
-        public static void Main(string[] args)
-        {
-            var configuration = new ConfigurationBuilder()
-               .AddCommandLine(args).Build();
-
-            var host = new WebHostBuilder()
-                .UseConfiguration(configuration)
-                .UseKestrel()
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseIISIntegration()
-                .UseStartup<Startup>()
-                .Build();
-
-            host.Run();
-        }
+        }    
     }
 }

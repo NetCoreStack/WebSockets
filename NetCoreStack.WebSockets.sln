@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.12
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{52C54080-F48B-4DBA-A418-8057611CAF6D}"
 EndProject
@@ -26,6 +26,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleAppProxyClient", "test\ConsoleAppProxyClient\ConsoleAppProxyClient.csproj", "{1AAECD28-5C1D-4ED6-8CBC-6FCAA3804ABF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetCoreStack.WebSockets.ProxyClient", "src\NetCoreStack.WebSockets.ProxyClient\NetCoreStack.WebSockets.ProxyClient.csproj", "{1738B969-D294-4417-999C-A3AC3B04EFE4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetCoreStack.WebSockets.Tests", "test\NetCoreStack.WebSockets.Tests\NetCoreStack.WebSockets.Tests.csproj", "{8A756067-8C6F-475C-B2CF-97B582A4DB47}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,6 +63,10 @@ Global
 		{1738B969-D294-4417-999C-A3AC3B04EFE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1738B969-D294-4417-999C-A3AC3B04EFE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1738B969-D294-4417-999C-A3AC3B04EFE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A756067-8C6F-475C-B2CF-97B582A4DB47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A756067-8C6F-475C-B2CF-97B582A4DB47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A756067-8C6F-475C-B2CF-97B582A4DB47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A756067-8C6F-475C-B2CF-97B582A4DB47}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -73,6 +79,7 @@ Global
 		{7ACFEED0-C1D7-43DE-95D7-3D2CEFDF6F9F} = {A1704016-03C8-4917-9C50-AE9DDF55ECB7}
 		{1AAECD28-5C1D-4ED6-8CBC-6FCAA3804ABF} = {A1704016-03C8-4917-9C50-AE9DDF55ECB7}
 		{1738B969-D294-4417-999C-A3AC3B04EFE4} = {52C54080-F48B-4DBA-A418-8057611CAF6D}
+		{8A756067-8C6F-475C-B2CF-97B582A4DB47} = {A1704016-03C8-4917-9C50-AE9DDF55ECB7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F299AD98-9AB4-4C7B-B125-5E82EB9B8700}

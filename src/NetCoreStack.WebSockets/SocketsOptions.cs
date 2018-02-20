@@ -6,14 +6,9 @@ namespace NetCoreStack.WebSockets
     {
         public Type Invocator { get; }
 
-        public int InvocatorTypeHashCode { get; }
-
         public SocketsOptions()
         {
             Invocator = typeof(TInvocator);
-            InvocatorTypeHashCode = Invocator.GetHashCode();
         }
-
-        public abstract string ConnectorKey();
     }
 }

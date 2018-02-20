@@ -45,18 +45,17 @@ namespace NetCoreStack.WebSockets.ProxyClient
             _loggerFactory = loggerFactory;
         }
 
-        protected abstract InvocatorContext CreateInvocatorContext();
+        public abstract InvocatorContext GetInvocatorContext();
 
         private async Task<WebSocketReceiver> TryConnectAsync(CancellationTokenSource cancellationTokenSource = null)
         {
-            var invocatorContext = CreateInvocatorContext();
-            var uri = new Uri($"ws://{invocatorContext.HostAddress}");
+            var invocatorContext = GetInvocatorContext();
             _webSocket = new ClientWebSocket();
             _webSocket.Options.SetRequestHeader(SocketsConstants.ConnectorName, invocatorContext.ConnectorName);
             try
             {
                 CancellationToken token = cancellationTokenSource != null ? cancellationTokenSource.Token : CancellationToken.None;
-                await _webSocket.ConnectAsync(uri, token);
+                await _webSocket.ConnectAsync(invocatorContext.Uri, token);
             }
             catch (Exception ex)
             {

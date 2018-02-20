@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets.Interfaces;
 using NetCoreStack.WebSockets.Internal;
 using System;
-using System.Linq;
 
 namespace NetCoreStack.WebSockets.ProxyClient
 {
@@ -17,7 +16,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 throw new ArgumentNullException(nameof(services));
             }
 
-            services.AddScoped<ProxyClientMarkerService>();
+            services.TryAddSingleton<ProxyClientMarkerService, ProxyClientMarkerService>();
             services.TryAdd(ServiceDescriptor.Singleton<ILoggerFactory, LoggerFactory>());
             services.TryAdd(ServiceDescriptor.Singleton<IStreamCompressor, GZipStreamCompressor>());
             services.TryAdd(ServiceDescriptor.Transient<IHandshakeStateTransport, DefaultHandshakeStateTransport>());
@@ -25,7 +24,6 @@ namespace NetCoreStack.WebSockets.ProxyClient
 
         public static ProxyWebSocketsBuilder AddProxyWebSockets(this IServiceCollection services)
         {
-            services.AddSingleton<IWebSocketConnector>(_ => InvocatorFactory.GetConnectors(_).First());
             AddProxyWebSocketsInternal(services);
             return new ProxyWebSocketsBuilder(services);
         }
