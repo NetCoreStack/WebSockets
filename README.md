@@ -45,9 +45,7 @@ public async Task<IActionResult> SendAsync([FromBody]SimpleModel model)
 #### Startup ConfigureServices
 ```csharp
 // WebSockets for Browsers
-services.AddNativeWebSockets(options => {
-    options.RegisterInvocator<AgentsWebSocketCommandInvocator>(WebSocketCommands.All);
-});
+services.AddNativeWebSockets<AgentsWebSocketCommandInvocator>();
 
 // Client WebSocket - Proxy connections
 var builder = services.AddProxyWebSockets();
