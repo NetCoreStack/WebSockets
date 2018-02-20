@@ -50,12 +50,13 @@ services.AddNativeWebSockets(options => {
 });
 
 // Client WebSocket - Proxy connections
-services.AddProxyWebSockets()
-    .Register<CustomWebSocketCommandInvocator>(connectorname, "localhost:7803")
-    .Register<AnotherEndpointWebSocketCommandInvocator>(connectorname, "localhost:5000"); // Another endpoint registration, host address must be unique
+var builder = services.AddProxyWebSockets();
 
-// Add MVC framework services.
-services.AddMvc();
+var connectorname = $"TestWebApp-{Environment.MachineName}";
+builder.Register<CustomWebSocketCommandInvocator>(connectorname, "localhost:7803");
+
+// Runtime context factory
+builder.Register<AnotherEndpointWebSocketCommandInvocator, CustomInvocatorContextFactory>();
 ```
 #### Startup Configure
 ```csharp
