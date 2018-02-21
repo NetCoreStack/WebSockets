@@ -9,12 +9,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
     {
         private readonly IClientInvocatorContextFactory<TInvocator> _invocatorContextFactory;
 
-        public ProxyOptions<TInvocator> Options { get; }
-
-        public override InvocatorContext GetInvocatorContext()
-        {
-            return _invocatorContextFactory.CreateInvocatorContext();
-        }
+        public override InvocatorContext InvocatorContext { get; }
 
         public ClientWebSocketConnectorOfT(IServiceProvider serviceProvider,
             IClientInvocatorContextFactory<TInvocator> invocatorContextFactory,
@@ -23,6 +18,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             : base(serviceProvider, compressor, loggerFactory)
         {
             _invocatorContextFactory = invocatorContextFactory ?? throw new ArgumentNullException(nameof(invocatorContextFactory));
+            InvocatorContext = _invocatorContextFactory.CreateInvocatorContext();
         }
     }
 }

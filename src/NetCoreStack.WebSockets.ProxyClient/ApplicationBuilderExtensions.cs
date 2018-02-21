@@ -24,7 +24,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             IList<IWebSocketConnector> connectors = InvocatorFactory.GetConnectors(app.ApplicationServices);
             foreach (var connector in connectors)
             {
-                InvocatorsHelper.EnsureHostPair(connector.GetInvocatorContext());
+                InvocatorsHelper.EnsureHostPair(connector.InvocatorContext);
                 appLifeTime.ApplicationStopping.Register(OnShutdown, connector);
                 Task.Factory.StartNew(async () => await connector.ConnectAsync(cancellationTokenSource), TaskCreationOptions.LongRunning);
             }

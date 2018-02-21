@@ -63,7 +63,7 @@ namespace NetCoreStack.WebSockets.Tests
             var customWebSocketCommandInvocator = Services.GetService<IWebSocketConnector<CustomWebSocketCommandInvocator>>();
             Assert.IsType<ClientWebSocketConnectorOfT<CustomWebSocketCommandInvocator>>(customWebSocketCommandInvocator);
 
-            var context = customWebSocketCommandInvocator.GetInvocatorContext();
+            var context = customWebSocketCommandInvocator.InvocatorContext;
             Assert.Equal($"TestWebApp-{Environment.MachineName}", context.ConnectorName);
             Assert.Equal("localhost:7803", context.HostAddress);
 
@@ -76,7 +76,7 @@ namespace NetCoreStack.WebSockets.Tests
             var customWebSocketCommandInvocator = Services.GetService<IWebSocketConnector<AnotherEndpointWebSocketCommandInvocator>>();
             Assert.IsType<ClientWebSocketConnectorOfT<AnotherEndpointWebSocketCommandInvocator>>(customWebSocketCommandInvocator);
 
-            var context = customWebSocketCommandInvocator.GetInvocatorContext();
+            var context = customWebSocketCommandInvocator.InvocatorContext;
             Assert.Equal("TestMachineName", context.ConnectorName);
             Assert.Equal("localhost:5003", context.HostAddress);
 

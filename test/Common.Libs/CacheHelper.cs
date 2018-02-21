@@ -29,7 +29,7 @@ namespace Common.Libs
                 return descriptor;
             }
 
-            throw new ArgumentOutOfRangeException($"Key could not be found: \"{key}\"");
+            return null;
         }
     }
 }

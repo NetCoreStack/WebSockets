@@ -13,14 +13,17 @@ namespace WebClientTestApp
     public class CustomWebSocketCommandInvocator : IClientWebSocketCommandInvocator
     {
         private readonly IConnectionManager _connectionManager;
+        private readonly IWebSocketConnector<CustomWebSocketCommandInvocator> _webSocketConnector;
         private readonly ILogger _logger;
         private readonly InMemoryCacheProvider _cacheProvider;
 
-        public CustomWebSocketCommandInvocator(IConnectionManager connectionManager, 
+        public CustomWebSocketCommandInvocator(IConnectionManager connectionManager,
+            IWebSocketConnector<CustomWebSocketCommandInvocator> webSocketConnector,
             InMemoryCacheProvider cacheProvider, 
             ILogger<CustomWebSocketCommandInvocator> logger)
         {
             _connectionManager = connectionManager;
+            _webSocketConnector = webSocketConnector;
             _cacheProvider = cacheProvider;
             _logger = logger;
         }
@@ -50,6 +53,10 @@ namespace WebClientTestApp
                     {
                         var keyStr = key.ToString();
                         var descriptor = CacheHelper.GetDescriptor(key.ToString());
+                        if (descriptor == null)
+                        {
+                            return;
+                        }
                         try
                         {
                             var genericList = descriptor.Type.CreateElementTypeAsGenericList();
