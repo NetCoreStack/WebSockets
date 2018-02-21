@@ -25,11 +25,5 @@ namespace NetCoreStack.WebSockets
             services.AddSingleton<IConnectionManager, ConnectionManager>();
             services.AddTransient(typeof(IServerWebSocketCommandInvocator), typeof(TInvocator));
         }
-
-        public static void AddNativeWebSockets<TInvocator>(this IServiceCollection services, string hostname)
-            where TInvocator : IServerWebSocketCommandInvocator
-        {
-            AddNativeWebSockets<TInvocator>(services);
-        }
     }
 }
