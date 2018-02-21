@@ -102,15 +102,15 @@ namespace NetCoreStack.WebSockets
             return new ArraySegment<byte>(content, 0, content.Length);
         }
 
-        public static string GetConnectionId(this WebSocketMessageContext webSocketContext)
+        public static string GetConnectionId(this WebSocketMessageContext context)
         {
-            if (webSocketContext == null)
+            if (context == null)
             {
-                throw new ArgumentNullException(nameof(webSocketContext));
+                throw new ArgumentNullException(nameof(context));
             }
 
             object connectionId = null;
-            if (webSocketContext.Header.TryGetValue(SocketsConstants.ConnectionId, out connectionId))
+            if (context.Header.TryGetValue(SocketsConstants.ConnectionId, out connectionId))
             {
                 return connectionId.ToString();
             }

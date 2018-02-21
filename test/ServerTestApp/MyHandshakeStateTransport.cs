@@ -6,7 +6,7 @@ namespace ServerTestApp
 {
     public class MyHandshakeStateTransport : IHandshakeStateTransport
     {
-        Task<IDictionary<string, object>> IHandshakeStateTransport.GetStateAsync()
+        public Task<IDictionary<string, object>> GetStateAsync()
         {
             var dictionary = new Dictionary<string, object>();
             return Task.FromResult<IDictionary<string, object>>(dictionary);

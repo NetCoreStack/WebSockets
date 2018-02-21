@@ -17,6 +17,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
         {
             var invocatorType = typeof(TInvocator);
             InvocatorFactory.Invocators.Add(invocatorType);
+            _services.AddTransient(invocatorType);
             _services.AddSingleton<IWebSocketConnector<TInvocator>, ClientWebSocketConnectorOfT<TInvocator>>();
         }
 

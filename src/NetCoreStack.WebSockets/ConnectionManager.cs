@@ -19,6 +19,7 @@ namespace NetCoreStack.WebSockets
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IHandshakeStateTransport _initState;
+        private readonly IHeaderProvider _headerProvider;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IStreamCompressor _compressor;
 
@@ -27,11 +28,13 @@ namespace NetCoreStack.WebSockets
         public ConnectionManager(IServiceProvider serviceProvider,
             IStreamCompressor compressor,
             IHandshakeStateTransport initState,
+            IHeaderProvider headerProvider,
             ILoggerFactory loggerFactory)
         {
             _serviceProvider = serviceProvider;
             _compressor = compressor;
             _initState = initState;
+            _headerProvider = headerProvider;
             _loggerFactory = loggerFactory;            
             Connections = new ConcurrentDictionary<string, WebSocketTransport>(StringComparer.OrdinalIgnoreCase);
         }
@@ -60,6 +63,7 @@ namespace NetCoreStack.WebSockets
                 properties.Add(CompressedKey, compressed);
             }
 
+            _headerProvider.Invoke(properties);
             string props = JsonConvert.SerializeObject(properties);
             byte[] header = Encoding.UTF8.GetBytes($"{props}");
 
@@ -228,6 +232,7 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentOutOfRangeException(nameof(transport));
             }
 
+            _headerProvider.Invoke(context.Header);
             var segments = context.ToSegment();
             var descriptor = new WebSocketMessageDescriptor
             {

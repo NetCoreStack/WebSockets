@@ -34,7 +34,7 @@ namespace WebClientTestApp
             builder.Register<CustomWebSocketCommandInvocator>(connectorname, "localhost:7803");
 
             // Runtime context factory
-            builder.Register<AnotherEndpointWebSocketCommandInvocator, CustomInvocatorContextFactory>();
+            // builder.Register<AnotherEndpointWebSocketCommandInvocator, CustomInvocatorContextFactory>();
 
             // Add framework services.
             services.AddMvc(options => {

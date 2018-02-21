@@ -16,13 +16,20 @@ namespace NetCoreStack.WebSockets
             {
                 throw new ArgumentNullException(nameof(services));
             }
-            
+
             services.TryAdd(ServiceDescriptor.Singleton<ILoggerFactory, LoggerFactory>());
+            services.TryAdd(ServiceDescriptor.Singleton<IHeaderProvider, DefaultHeaderProvider>());
             services.TryAdd(ServiceDescriptor.Singleton<IStreamCompressor, GZipStreamCompressor>());
             services.TryAdd(ServiceDescriptor.Transient<IHandshakeStateTransport, DefaultHandshakeStateTransport>());
 
             services.AddSingleton<IConnectionManager, ConnectionManager>();
             services.AddTransient(typeof(IServerWebSocketCommandInvocator), typeof(TInvocator));
+        }
+
+        public static void AddNativeWebSockets<TInvocator>(this IServiceCollection services, string hostname)
+            where TInvocator : IServerWebSocketCommandInvocator
+        {
+            AddNativeWebSockets<TInvocator>(services);
         }
     }
 }

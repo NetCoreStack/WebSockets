@@ -1,5 +1,4 @@
-﻿using Common.Libs;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -7,9 +6,9 @@ using NetCoreStack.WebSockets;
 using NetCoreStack.WebSockets.Internal;
 using ServerTestApp.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -62,20 +61,9 @@ namespace ServerTestApp.Controllers
         [HttpPost(nameof(SendBinaryAsync))]
         public async Task<IActionResult> SendBinaryAsync()
         {
-            try
-            {
-                foreach (KeyValuePair<string, CacheItemDescriptor> entry in CacheHelper.CacheKeys)
-                {
-                    var routeValueDictionary = new RouteValueDictionary(new { Key = entry.Key });
-                    var bytes = _distrubutedCache.Get(entry.Key);
-                    await _connectionManager.BroadcastBinaryAsync(bytes, routeValueDictionary);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-
+            var routeValueDictionary = new RouteValueDictionary(new { Key = "SomeKey" });
+            var bytes = Encoding.UTF8.GetBytes("Hello World");
+            await _connectionManager.BroadcastBinaryAsync(bytes, routeValueDictionary);
             return Ok();
         }
 

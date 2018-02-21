@@ -19,7 +19,9 @@ namespace WebClientTestApp
             }
 
             // Sending incoming data from Backend zone to the Clients (Browsers)
-            await _connectionManager.BroadcastAsync(context);
+            // await _connectionManager.BroadcastAsync(context);
+
+            await _connectionManager.SendAsync(context.GetConnectionId(), context);
         }
     }
 }
