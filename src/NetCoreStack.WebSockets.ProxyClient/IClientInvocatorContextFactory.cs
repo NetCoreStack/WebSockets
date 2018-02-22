@@ -2,6 +2,6 @@
 {
     public interface IClientInvocatorContextFactory<TInvocator> where TInvocator : IClientWebSocketCommandInvocator
     {
-        InvocatorContext CreateInvocatorContext();
+        ClientInvocatorContext CreateInvocatorContext();
     }
 }

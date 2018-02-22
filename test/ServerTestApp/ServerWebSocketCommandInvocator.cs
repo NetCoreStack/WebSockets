@@ -21,15 +21,15 @@ namespace ServerTestApp
             if (context.MessageType == WebSocketMessageType.Text
                 && context.Command == WebSocketCommands.DataSend)
             {
-                if (context.Header != null)
+                if (context.Header.TryGetValue(nameof(WebSocketHeaderNames.CacheRequest), out object cacheRequest))
                 {
-                    object cacheRequest = null;
-                    if (context.Header.TryGetValue(nameof(WebSocketHeaderNames.CacheRequest), out cacheRequest))
-                    {
-                        var connectionId = context.Value.ToString();
-                        await _cache.SendCache(_connectionManager, connectionId);
-                    }
+                    var connectionId = context.Value.ToString();
+                    await _cache.SendCache(_connectionManager, connectionId);
+
+                    return;
                 }
+
+                await _connectionManager.BroadcastAsync(context);
             }
         }
     }

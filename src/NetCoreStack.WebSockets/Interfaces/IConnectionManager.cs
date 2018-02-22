@@ -51,4 +51,9 @@ namespace NetCoreStack.WebSockets
         /// <param name="connectionId"></param>
         void CloseConnection(string connectionId, bool keepAlive);
     }
+
+    public interface IConnectionManager<TInvocator> where TInvocator : IServerWebSocketCommandInvocator
+    {
+
+    }
 }

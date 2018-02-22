@@ -42,7 +42,10 @@ namespace NetCoreStack.WebSockets.Internal
                         }
 
                         var invocator = _context.GetInvocator(_serviceProvider);
-                        invocator?.InvokeAsync(context);
+                        if (invocator != null)
+                        {
+                            await invocator.InvokeAsync(context);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -77,7 +80,10 @@ namespace NetCoreStack.WebSockets.Internal
                     {
                         var context = await result.ToBinaryContextAsync(_context.Compressor, binaryResult);
                         var invocator = _context.GetInvocator(_serviceProvider);
-                        invocator?.InvokeAsync(context);
+                        if (invocator != null)
+                        {
+                            await invocator.InvokeAsync(context);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -86,6 +92,7 @@ namespace NetCoreStack.WebSockets.Internal
                     result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 }
             }
+
             await _context.WebSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
             _closeCallback?.Invoke(_context);
         }

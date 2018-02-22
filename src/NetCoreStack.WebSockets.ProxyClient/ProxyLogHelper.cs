@@ -9,7 +9,7 @@ namespace NetCoreStack.WebSockets.Internal
 {
     public static class ProxyLogHelper
     {
-        public static void Log(ILoggerFactory loggerFactory, InvocatorContext context, string message, Exception ex = null)
+        public static void Log(ILoggerFactory loggerFactory, ClientInvocatorContext context, string message, Exception ex = null)
         {
             LogLevel logLevel = LogLevel.Debug;
             if (ex != null)

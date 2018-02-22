@@ -1,22 +1,21 @@
 ﻿using System;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace NetCoreStack.WebSockets
 {
     public static class WebSocketReceiverExtensions
     {
-        public static IWebSocketCommandInvocator GetInvocator(this WebSocketReceiverContext context, IServiceProvider serviceProvider)
+        public static IServerWebSocketCommandInvocator GetInvocator(this WebSocketReceiverContext context, IServiceProvider serviceProvider)
         {
             if (context.InvocatorContext != null)
             {
                 var instance = serviceProvider.GetService(context.InvocatorContext.Invocator);
-                if (instance != null && instance is IWebSocketCommandInvocator)
+                if (instance != null && instance is IServerWebSocketCommandInvocator)
                 {
-                    return (IWebSocketCommandInvocator)instance;
+                    return (IServerWebSocketCommandInvocator)instance;
                 }
             }
 
-            return serviceProvider.GetService<IServerWebSocketCommandInvocator>();
+            return null;
         }
     }
 }

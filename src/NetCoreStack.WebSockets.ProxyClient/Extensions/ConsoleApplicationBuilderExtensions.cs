@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NetCoreStack.WebSockets.ProxyClient.Console
+namespace NetCoreStack.WebSockets.ProxyClient
 {
     public static class ConsoleApplicationBuilderExtensions
     {

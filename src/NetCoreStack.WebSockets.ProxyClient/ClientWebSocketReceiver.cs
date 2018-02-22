@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using NetCoreStack.WebSockets.Internal;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -7,19 +8,19 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NetCoreStack.WebSockets.Internal
+namespace NetCoreStack.WebSockets.ProxyClient
 {
     public class ClientWebSocketReceiver
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly WebSocketReceiverContext _context;
-        private readonly Action<WebSocketReceiverContext> _closeCallback;
+        private readonly ClientWebSocketReceiverContext _context;
+        private readonly Action<ClientWebSocketReceiverContext> _closeCallback;
         private readonly Action<string> _handshakeCallback;
         private readonly ILogger<ClientWebSocketReceiver> _logger;
 
-        public ClientWebSocketReceiver(IServiceProvider serviceProvider, 
-            WebSocketReceiverContext context, 
-            Action<WebSocketReceiverContext> closeCallback, 
+        public ClientWebSocketReceiver(IServiceProvider serviceProvider,
+            ClientWebSocketReceiverContext context, 
+            Action<ClientWebSocketReceiverContext> closeCallback, 
             Action<string> handshakeCallback = null)
         {
             _serviceProvider = serviceProvider;
@@ -49,7 +50,10 @@ namespace NetCoreStack.WebSockets.Internal
                             }
 
                             var invocator = _context.GetInvocator(_serviceProvider);
-                            invocator?.InvokeAsync(context);
+                            if (invocator != null)
+                            {
+                                await invocator.InvokeAsync(context);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -84,7 +88,10 @@ namespace NetCoreStack.WebSockets.Internal
                         {
                             var context = await result.ToBinaryContextAsync(_context.Compressor, binaryResult);
                             var invocator = _context.GetInvocator(_serviceProvider);
-                            invocator?.InvokeAsync(context);
+                            if (invocator != null)
+                            {
+                                await invocator.InvokeAsync(context);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -99,11 +106,6 @@ namespace NetCoreStack.WebSockets.Internal
             }
             catch (Exception ex)
             {
-                if (ex is TaskCanceledException)
-                {
-                    return;
-                }
-
                 var dictionary = new Dictionary<string, string>();
                 dictionary.Add(nameof(_context.ConnectionId), _context.ConnectionId);
 

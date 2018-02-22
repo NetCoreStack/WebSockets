@@ -12,9 +12,9 @@ namespace NetCoreStack.WebSockets.Tests
             _hostingEnvironment = hostingEnvironment;
         }
 
-        public InvocatorContext CreateInvocatorContext()
+        public ClientInvocatorContext CreateInvocatorContext()
         {
-            return new InvocatorContext(typeof(AnotherEndpointWebSocketCommandInvocator), 
+            return new ClientInvocatorContext(typeof(AnotherEndpointWebSocketCommandInvocator), 
                 "TestMachineName", 
                 "localhost:5003");
         }

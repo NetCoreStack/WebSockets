@@ -15,13 +15,15 @@ using static NetCoreStack.WebSockets.Internal.NCSConstants;
 
 namespace NetCoreStack.WebSockets
 {
-    public class ConnectionManager : IConnectionManager
+    public abstract class ConnectionManager : IConnectionManager
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IHandshakeStateTransport _initState;
         private readonly IHeaderProvider _headerProvider;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IStreamCompressor _compressor;
+
+        public abstract InvocatorContext InvocatorContext { get; }
 
         public ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
 
@@ -154,7 +156,8 @@ namespace NetCoreStack.WebSockets
                 Compressor = _compressor,
                 ConnectionId = connectionId,
                 LoggerFactory = _loggerFactory,
-                WebSocket = webSocket
+                WebSocket = webSocket,
+                InvocatorContext = InvocatorContext
             };
             
             WebSocketTransport transport = null;

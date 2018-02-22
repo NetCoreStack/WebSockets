@@ -14,9 +14,9 @@ namespace WebClientTestApp
             _hostingEnvironment = hostingEnvironment;
         }
 
-        public InvocatorContext CreateInvocatorContext()
+        public ClientInvocatorContext CreateInvocatorContext()
         {
-            return new InvocatorContext(typeof(AnotherEndpointWebSocketCommandInvocator),
+            return new ClientInvocatorContext(typeof(AnotherEndpointWebSocketCommandInvocator),
                 Environment.MachineName,
                 "localhost:5003",
                 uriPath: "ws",

@@ -18,9 +18,9 @@ namespace NetCoreStack.WebSockets.ProxyClient
             _proxyOptions = options.Value;
         }
 
-        public InvocatorContext CreateInvocatorContext()
+        public ClientInvocatorContext CreateInvocatorContext()
         {
-            return new InvocatorContext(_proxyOptions.Invocator, _proxyOptions.ConnectorName, _proxyOptions.WebSocketHostAddress);
+            return new ClientInvocatorContext(_proxyOptions.Invocator, _proxyOptions.ConnectorName, _proxyOptions.WebSocketHostAddress);
         }
     }
 }

@@ -9,7 +9,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
     {
         private readonly IClientInvocatorContextFactory<TInvocator> _invocatorContextFactory;
 
-        public override InvocatorContext InvocatorContext { get; }
+        public override ClientInvocatorContext InvocatorContext { get; }
 
         public ClientWebSocketConnectorOfT(IServiceProvider serviceProvider,
             IClientInvocatorContextFactory<TInvocator> invocatorContextFactory,

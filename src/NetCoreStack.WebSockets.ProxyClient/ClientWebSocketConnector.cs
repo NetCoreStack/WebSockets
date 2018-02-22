@@ -45,9 +45,9 @@ namespace NetCoreStack.WebSockets.ProxyClient
             _loggerFactory = loggerFactory;
         }
 
-        public abstract InvocatorContext InvocatorContext { get; }
+        public abstract ClientInvocatorContext InvocatorContext { get; }
 
-        private async Task<WebSocketReceiver> TryConnectAsync(CancellationTokenSource cancellationTokenSource = null)
+        private async Task<ClientWebSocketReceiver> TryConnectAsync(CancellationTokenSource cancellationTokenSource = null)
         {
             _webSocket = new ClientWebSocket();
             _webSocket.Options.SetRequestHeader(NCSConstants.ConnectorName, InvocatorContext.ConnectorName);
@@ -62,7 +62,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 return null;
             }
 
-            var receiverContext = new WebSocketReceiverContext
+            var receiverContext = new ClientWebSocketReceiverContext
             {
                 Compressor = _compressor,
                 InvocatorContext = InvocatorContext,
@@ -70,7 +70,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 WebSocket = _webSocket
             };
 
-            var receiver = new WebSocketReceiver(_serviceProvider, receiverContext, Close, (connectionId) => {
+            var receiver = new ClientWebSocketReceiver(_serviceProvider, receiverContext, Close, (connectionId) => {
                 _connectionId = connectionId;
             });
 
@@ -82,7 +82,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             if (cancellationTokenSource == null)
                 cancellationTokenSource = new CancellationTokenSource();
 
-            WebSocketReceiver receiver = null;
+            ClientWebSocketReceiver receiver = null;
             while (!cancellationTokenSource.IsCancellationRequested)
             {
                 receiver = await TryConnectAsync(cancellationTokenSource);
@@ -138,10 +138,10 @@ namespace NetCoreStack.WebSockets.ProxyClient
             await _webSocket.SendAsync(segments, WebSocketMessageType.Binary, true, CancellationToken.None);
         }
 
-        internal void Close(WebSocketReceiverContext context)
+        internal void Close(ClientWebSocketReceiverContext context)
         {
             context.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, 
-                nameof(WebSocketReceiverContext), 
+                nameof(ClientWebSocketReceiverContext), 
                 CancellationToken.None);
         }
 

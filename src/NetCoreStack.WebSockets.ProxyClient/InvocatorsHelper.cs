@@ -31,7 +31,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             _invocators.Add(key, connectorHostPair);
         }
 
-        public static void EnsureHostPair(InvocatorContext context)
+        public static void EnsureHostPair(ClientInvocatorContext context)
         {
             if (context == null)
             {

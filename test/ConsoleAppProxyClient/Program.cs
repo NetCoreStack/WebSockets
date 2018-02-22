@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NetCoreStack.WebSockets.ProxyClient;
-using NetCoreStack.WebSockets.ProxyClient.Console;
 using System;
 
 namespace ConsoleAppProxyClient
