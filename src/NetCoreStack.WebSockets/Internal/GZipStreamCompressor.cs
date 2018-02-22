@@ -23,13 +23,13 @@ namespace NetCoreStack.WebSockets.Internal
         {
             using (GZipStream stream = new GZipStream(new MemoryStream(input), CompressionMode.Decompress))
             {
-                byte[] buffer = new byte[SocketsConstants.ChunkSize];
+                byte[] buffer = new byte[NCSConstants.ChunkSize];
                 using (MemoryStream memory = new MemoryStream())
                 {
                     int count = 0;
                     do
                     {
-                        count = await stream.ReadAsync(buffer, 0, SocketsConstants.ChunkSize);
+                        count = await stream.ReadAsync(buffer, 0, NCSConstants.ChunkSize);
                         if (count > 0)
                         {
                             await memory.WriteAsync(buffer, 0, count);

@@ -12,9 +12,9 @@ namespace NetCoreStack.WebSockets
                 return;
             }
 
-            if (!header.TryGetValue(SocketsConstants.WSFQN, out object host))
+            if (!header.TryGetValue(NCSConstants.WSFQN, out object host))
             {
-                header.Add(SocketsConstants.WSFQN, FQNHelper.Name);
+                header.Add(NCSConstants.WSFQN, FQNHelper.Name);
             }
         }
     }

@@ -26,7 +26,7 @@ namespace NetCoreStack.WebSockets.Internal
 
         private async Task InternalReceiveAsync()
         {
-            var buffer = new byte[SocketsConstants.ChunkSize];
+            var buffer = new byte[NCSConstants.ChunkSize];
             var result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             while (!result.CloseStatus.HasValue)
             {

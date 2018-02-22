@@ -26,27 +26,27 @@ namespace NetCoreStack.WebSockets.Internal
                 string connectionId = string.Empty;
                 string connectorName = string.Empty;
                 StringValues headerValue = "";
-                if (httpContext.Request.Headers.TryGetValue(SocketsConstants.ConnectorName, out headerValue))
+                if (httpContext.Request.Headers.TryGetValue(NCSConstants.ConnectorName, out headerValue))
                 {
                     connectorName = headerValue.ToString();
                 }
-                if (httpContext.Request.Headers.TryGetValue(SocketsConstants.ConnectionId, out headerValue))
+                if (httpContext.Request.Headers.TryGetValue(NCSConstants.ConnectionId, out headerValue))
                 {
                     connectionId = headerValue.ToString();
                 }
 
                 if (string.IsNullOrEmpty(connectorName))
                 {
-                    if (httpContext.Request.Query.ContainsKey(SocketsConstants.ConnectorName))
+                    if (httpContext.Request.Query.ContainsKey(NCSConstants.ConnectorName))
                     {
-                        connectorName = httpContext.Request.Query[SocketsConstants.ConnectorName];
+                        connectorName = httpContext.Request.Query[NCSConstants.ConnectorName];
                     }
                 }
                 if (string.IsNullOrEmpty(connectionId))
                 {
-                    if (httpContext.Request.Query.ContainsKey(SocketsConstants.ConnectionId))
+                    if (httpContext.Request.Query.ContainsKey(NCSConstants.ConnectionId))
                     {
-                        connectionId = httpContext.Request.Query[SocketsConstants.ConnectionId];
+                        connectionId = httpContext.Request.Query[NCSConstants.ConnectionId];
                         Guid connectionIdGuid = Guid.Empty;
                         if (!Guid.TryParse(connectionId, out connectionIdGuid))
                         {

@@ -11,7 +11,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static NetCoreStack.WebSockets.Internal.SocketsConstants;
+using static NetCoreStack.WebSockets.Internal.NCSConstants;
 
 namespace NetCoreStack.WebSockets
 {

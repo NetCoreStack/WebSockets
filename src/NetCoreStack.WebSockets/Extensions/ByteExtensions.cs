@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using static NetCoreStack.WebSockets.Internal.SocketsConstants;
+using static NetCoreStack.WebSockets.Internal.NCSConstants;
 
 namespace NetCoreStack.WebSockets
 {

@@ -50,7 +50,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
         private async Task<WebSocketReceiver> TryConnectAsync(CancellationTokenSource cancellationTokenSource = null)
         {
             _webSocket = new ClientWebSocket();
-            _webSocket.Options.SetRequestHeader(SocketsConstants.ConnectorName, InvocatorContext.ConnectorName);
+            _webSocket.Options.SetRequestHeader(NCSConstants.ConnectorName, InvocatorContext.ConnectorName);
             try
             {
                 CancellationToken token = cancellationTokenSource != null ? cancellationTokenSource.Token : CancellationToken.None;
@@ -109,7 +109,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             }
 
             object connectionId = string.Empty;
-            if (context.Header.TryGetValue(SocketsConstants.ConnectionId, out connectionId))
+            if (context.Header.TryGetValue(NCSConstants.ConnectionId, out connectionId))
             {
                 var id = connectionId as string;
                 if (string.IsNullOrEmpty(id))
@@ -119,7 +119,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             }
             else
             {
-                context.Header.Add(SocketsConstants.ConnectionId, ConnectionId);
+                context.Header.Add(NCSConstants.ConnectionId, ConnectionId);
             }
 
             return context.ToSegment();

@@ -110,7 +110,7 @@ namespace NetCoreStack.WebSockets
             }
 
             object connectionId = null;
-            if (context.Header.TryGetValue(SocketsConstants.ConnectionId, out connectionId))
+            if (context.Header.TryGetValue(NCSConstants.ConnectionId, out connectionId))
             {
                 return connectionId.ToString();
             }
