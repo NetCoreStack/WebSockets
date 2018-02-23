@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.ApplicationInsights.Extensibility.Implementation;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -67,6 +68,8 @@ namespace ServerTestApp
 
             app.UseSwagger();
             app.UseSwaggerUi();
+
+            TelemetryDebugWriter.IsTracingDisabled = true;
         }
 
         public static void Main(string[] args)

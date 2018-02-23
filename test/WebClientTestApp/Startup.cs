@@ -1,4 +1,5 @@
 ﻿using Common.Libs;
+using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -70,6 +71,8 @@ namespace WebClientTestApp
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            TelemetryDebugWriter.IsTracingDisabled = true;
         }    
     }
 }
