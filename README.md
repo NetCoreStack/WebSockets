@@ -1,11 +1,6 @@
 ### Cross-Platform WebSockets Proxy
 
-This project is demonstrating bidirectional connection and data transfer via .NET Core WebSockets.
-
-You can use it on your API - Service side to communicate among your trusted Backend API consumer 
-Clients (for example MVC Web Application Hosting) and at the same time may 
-client to be a Browser (User-Agent) then you can manage your connection and domain data transfer 
-operation with same interface.
+Minimalist websocket framework for .NET Core. You can use it on your APIs to communicate among your various client types.
 
 [Latest release on Nuget](https://www.nuget.org/packages/NetCoreStack.WebSockets/)
 

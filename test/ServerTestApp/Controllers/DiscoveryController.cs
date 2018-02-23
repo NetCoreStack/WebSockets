@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets;
 using NetCoreStack.WebSockets.Internal;
+using Newtonsoft.Json;
 using ServerTestApp.Models;
 using System;
 using System.Linq;
@@ -39,22 +40,26 @@ namespace ServerTestApp.Controllers
         [HttpPost(nameof(SendAsync))]
         public async Task<IActionResult> SendAsync([FromBody]SimpleModel model)
         {
-            var echo = $"Echo from server '{model.Key}' - {DateTime.Now}";
-            var obj = new { message = echo };
-            var webSocketContext = new WebSocketMessageContext { Command = WebSocketCommands.DataSend, Value = obj };
-            await _connectionManager.BroadcastAsync(webSocketContext);
+            if (model != null)
+            {
+                var echo = $"Echo from server '{model.Key}' - {DateTime.Now}";
+                var obj = new { message = echo };
+                var webSocketContext = new WebSocketMessageContext { Command = WebSocketCommands.DataSend, Value = obj };
+                await _connectionManager.BroadcastAsync(webSocketContext);
+            }
+
             return Ok();
         }
 
         [HttpPost(nameof(BroadcastBinaryAsync))]
         public async Task<IActionResult> BroadcastBinaryAsync([FromBody]SimpleModel model)
         {
-            var bytes = _distrubutedCache.Get(model.Key);
-            var routeValueDictionary = new RouteValueDictionary(new { Key = model.Key });
-            if (bytes != null)
+            if (model != null)
             {
-                await _connectionManager.BroadcastBinaryAsync(bytes, routeValueDictionary);
+                var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model));
+                await _connectionManager.BroadcastBinaryAsync(bytes, new RouteValueDictionary(new { Id = 1, SomeProperty = "Some value" }));
             }
+            
             return Ok();
         }
 

@@ -35,51 +35,20 @@ namespace WebClientTestApp
 
         public async Task InvokeAsync(WebSocketMessageContext context)
         {
-            await Task.CompletedTask;
-
             if (context.MessageType == WebSocketMessageType.Text)
             {
-                await _connectionManager.BroadcastAsync(context);
-                return;
+                
             }
 
             if (context.MessageType == WebSocketMessageType.Binary)
             {
-                var stateDictionary = context.Header as Dictionary<string, object>;
-                if (stateDictionary != null)
+                if (context.Header is Dictionary<string, object> stateDictionary)
                 {
-                    object key = null;
-                    if (stateDictionary.TryGetValue("Key", out key))
-                    {
-                        var keyStr = key.ToString();
-                        var descriptor = CacheHelper.GetDescriptor(key.ToString());
-                        if (descriptor == null)
-                        {
-                            return;
-                        }
-                        try
-                        {
-                            var genericList = descriptor.Type.CreateElementTypeAsGenericList();
-                            var value = context.Value;
-                            _cacheProvider.SetObject(keyStr, value, new MemoryCacheEntryOptions { Priority = CacheItemPriority.NeverRemove });
-
-#if DEBUG
-                            var length = context.Length;
-                            var message = $"===Sandbox: {Environment.MachineName}===Key: {keyStr}===Length: {length}===";
-                            _logger.LogDebug(message);
-#endif
-                        }
-                        catch (Exception ex)
-                        {
-#if DEBUG
-                            var length = context.Length;
-                            var message = $"===Exception: {ex.Message}===Sandbox: {Environment.MachineName}===Key: {keyStr}===Length: {length}===";
-                            _logger.LogError(message);
-#endif
-                        }
-                    }
+                    
                 }
             }
+
+            await _connectionManager.BroadcastAsync(context);
         }
     }
 }

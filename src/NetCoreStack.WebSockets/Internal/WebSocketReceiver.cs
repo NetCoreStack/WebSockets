@@ -11,17 +11,14 @@ namespace NetCoreStack.WebSockets.Internal
         private readonly IServiceProvider _serviceProvider;
         private readonly WebSocketReceiverContext _context;
         private readonly Action<WebSocketReceiverContext> _closeCallback;
-        private readonly Action<string> _handshakeCallback;
 
         public WebSocketReceiver(IServiceProvider serviceProvider, 
             WebSocketReceiverContext context, 
-            Action<WebSocketReceiverContext> closeCallback, 
-            Action<string> handshakeCallback = null)
+            Action<WebSocketReceiverContext> closeCallback)
         {
             _serviceProvider = serviceProvider;
             _context = context;
             _closeCallback = closeCallback;
-            _handshakeCallback = handshakeCallback;
         }
 
         private async Task InternalReceiveAsync()
@@ -35,12 +32,6 @@ namespace NetCoreStack.WebSockets.Internal
                     try
                     {
                         var context = result.ToContext(buffer);
-                        if (context.Command == WebSocketCommands.Handshake)
-                        {
-                            _context.ConnectionId = context.Value?.ToString();
-                            _handshakeCallback?.Invoke(_context.ConnectionId);
-                        }
-
                         var invocator = _context.GetInvocator(_serviceProvider);
                         if (invocator != null)
                         {

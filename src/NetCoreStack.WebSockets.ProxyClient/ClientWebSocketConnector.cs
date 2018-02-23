@@ -17,6 +17,8 @@ namespace NetCoreStack.WebSockets.ProxyClient
         private readonly IStreamCompressor _compressor;
         private readonly ILoggerFactory _loggerFactory;
 
+        private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
+
         public string ConnectionId
         {
             get
@@ -92,7 +94,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 }
             }
 
-            await receiver.ReceiveAsync();
+            await Task.WhenAll(receiver.ReceiveAsync());
             
             // Handshake down try re-connect
             if (_webSocket.CloseStatus.HasValue)
@@ -128,14 +130,17 @@ namespace NetCoreStack.WebSockets.ProxyClient
         public async Task SendAsync(WebSocketMessageContext context)
         {
             var segments = CreateTextSegment(context);
+            // _semaphoreSlim.Wait();
             await _webSocket.SendAsync(segments, WebSocketMessageType.Text, true, CancellationToken.None);
+            // _semaphoreSlim.Release();
         }
 
         public async Task SendBinaryAsync(byte[] bytes)
         {
-            // TODO Chunked
             var segments = new ArraySegment<byte>(bytes, 0, bytes.Count());
+            // _semaphoreSlim.Wait();
             await _webSocket.SendAsync(segments, WebSocketMessageType.Binary, true, CancellationToken.None);
+            // _semaphoreSlim.Release();
         }
 
         internal void Close(ClientWebSocketReceiverContext context)

@@ -1,6 +1,7 @@
 ﻿using Common.Libs;
 using Microsoft.Extensions.Caching.Distributed;
 using NetCoreStack.WebSockets;
+using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
 
@@ -18,19 +19,8 @@ namespace ServerTestApp
 
         public async Task InvokeAsync(WebSocketMessageContext context)
         {
-            if (context.MessageType == WebSocketMessageType.Text
-                && context.Command == WebSocketCommands.DataSend)
-            {
-                if (context.Header.TryGetValue(nameof(WebSocketHeaderNames.CacheRequest), out object cacheRequest))
-                {
-                    var connectionId = context.Value.ToString();
-                    await _cache.SendCache(_connectionManager, connectionId);
-
-                    return;
-                }
-
-                await _connectionManager.BroadcastAsync(context);
-            }
+            await Task.CompletedTask;
+            Debug.WriteLine("Context length: {0}", context.Length);
         }
     }
 }

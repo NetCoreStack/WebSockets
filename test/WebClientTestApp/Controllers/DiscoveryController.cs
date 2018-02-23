@@ -6,12 +6,18 @@ using System.Threading.Tasks;
 
 namespace WebClientTestApp.Controllers
 {
-    public class ClientDiscoveryController : Controller
+    public class DiscoveryController : Controller
     {
         private readonly IWebSocketConnector _connector;
-        public ClientDiscoveryController(IWebSocketConnector<CustomWebSocketCommandInvocator> connector)
+        public DiscoveryController(IWebSocketConnector<CustomWebSocketCommandInvocator> connector)
         {
             _connector = connector;
+        }
+
+        [HttpGet]
+        public IActionResult Status()
+        {
+            return Ok(new { _connector.WebSocketState });
         }
 
         [HttpGet]
