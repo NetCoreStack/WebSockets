@@ -1,8 +1,6 @@
-﻿using Common.Libs;
-using Microsoft.Extensions.Caching.Distributed;
+﻿using Microsoft.Extensions.Caching.Distributed;
 using NetCoreStack.WebSockets;
 using System.Diagnostics;
-using System.Net.WebSockets;
 using System.Threading.Tasks;
 
 namespace ServerTestApp

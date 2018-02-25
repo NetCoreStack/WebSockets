@@ -20,12 +20,27 @@ namespace NetCoreStack.WebSockets
         Task BroadcastAsync(WebSocketMessageContext context);
 
         /// <summary>
+        /// Text message broadcaster
+        /// </summary>
+        /// <param name="inputs">Byte content</param>
+        /// <param name="properties">Extra properties, header</param>
+        /// <returns></returns>
+        Task BroadcastAsync(byte[] inputs, IDictionary<string, object> properties = null);
+
+        /// <summary>
         /// Binary message broadcaster
         /// </summary>
         /// <param name="inputs"></param>
-        /// <param name="properties"></param>
+        /// <param name="properties">Extra properties, header</param>
         /// <returns></returns>
-        Task BroadcastBinaryAsync(byte[] input, IDictionary<string, object> properties);
+        Task BroadcastBinaryAsync(byte[] input, IDictionary<string, object> properties = null);
+
+        /// <summary>
+        /// Binary message broadcaster with inline serializer
+        /// </summary>
+        /// <param name="context">WebSocket message context</param>
+        /// <returns></returns>
+        Task BroadcastBinaryAsync(WebSocketMessageContext context);
 
         /// <summary>
         /// Send text message to specified connection
@@ -49,7 +64,7 @@ namespace NetCoreStack.WebSockets
         /// Close the specified connection
         /// </summary>
         /// <param name="connectionId"></param>
-        void CloseConnection(string connectionId, bool keepAlive);
+        void CloseConnection(string connectionId);
     }
 
     public interface IConnectionManager<TInvocator> where TInvocator : IServerWebSocketCommandInvocator

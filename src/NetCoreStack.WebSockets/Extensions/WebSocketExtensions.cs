@@ -12,27 +12,32 @@ namespace NetCoreStack.WebSockets
 {
     public static class WebSocketExtensions
     {
-        public static WebSocketMessageContext ToContext(this WebSocketReceiveResult result, byte[] values)
+        public static WebSocketMessageContext ToContext(this WebSocketReceiveResult result, byte[] input)
         {
             if (result == null)
             {
                 throw new ArgumentNullException(nameof(result));
             }
+
+            if (input == null)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
             
-            var content = Encoding.UTF8.GetString(values, 0, result.Count);
+            var content = Encoding.UTF8.GetString(input, 0, input.Length);
             WebSocketMessageContext webSocketContext = new WebSocketMessageContext();
             try
             {
                 webSocketContext = JsonConvert.DeserializeObject<WebSocketMessageContext>(content);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 webSocketContext.Command = WebSocketCommands.DataSend;
                 webSocketContext.Value = content;
                 webSocketContext.MessageType = result.MessageType;
             }
 
-            webSocketContext.Length = result.Count;
+            webSocketContext.Length = input.Length;
             return webSocketContext;
         }
 
@@ -102,14 +107,14 @@ namespace NetCoreStack.WebSockets
             return new ArraySegment<byte>(content, 0, content.Length);
         }
 
-        public static byte[] ToBytes(this WebSocketMessageContext webSocketContext)
+        public static MemoryStream ToMemoryStream(this WebSocketMessageContext webSocketContext)
         {
             if (webSocketContext == null)
             {
                 throw new ArgumentNullException(nameof(webSocketContext));
             }
 
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(webSocketContext));            
+            return new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(webSocketContext)));
         }
 
         public static string GetConnectionId(this WebSocketMessageContext context)

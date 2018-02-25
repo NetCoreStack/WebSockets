@@ -11,7 +11,6 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static NetCoreStack.WebSockets.Internal.NCSConstants;
 
 namespace NetCoreStack.WebSockets
 {
@@ -21,6 +20,7 @@ namespace NetCoreStack.WebSockets
         private readonly IHandshakeStateTransport _initState;
         private readonly IHeaderProvider _headerProvider;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger<ConnectionManager> _logger;
         private readonly IStreamCompressor _compressor;
 
         public abstract InvocatorContext InvocatorContext { get; }
@@ -37,11 +37,12 @@ namespace NetCoreStack.WebSockets
             _compressor = compressor;
             _initState = initState;
             _headerProvider = headerProvider;
-            _loggerFactory = loggerFactory;            
+            _loggerFactory = loggerFactory;
+            _logger = _loggerFactory.CreateLogger<ConnectionManager>();
             Connections = new ConcurrentDictionary<string, WebSocketTransport>(StringComparer.OrdinalIgnoreCase);
         }
 
-        private async Task<byte[]> PrepareFramesBytesAsync(byte[] body, IDictionary<string, object> properties)
+        private async Task<byte[]> PrepareFramesBytesAsync(byte[] body, IDictionary<string, object> properties = null)
         {
             if (body == null)
             {
@@ -55,14 +56,13 @@ namespace NetCoreStack.WebSockets
 
             bool compressed = GZipHelper.IsGZipBody(body);
 
-            object key = null;
-            if (properties.TryGetValue(CompressedKey, out key))
+            if (properties.TryGetValue(NCSConstants.CompressedKey, out object key))
             {
-                properties[CompressedKey] = compressed;
-            }   
+                properties[NCSConstants.CompressedKey] = compressed;
+            }
             else
             {
-                properties.Add(CompressedKey, compressed);
+                properties.Add(NCSConstants.CompressedKey, compressed);
             }
 
             _headerProvider.Invoke(properties);
@@ -74,123 +74,55 @@ namespace NetCoreStack.WebSockets
                 body = await _compressor.CompressAsync(body);
             }
 
-            body = header.Concat(Splitter).Concat(body).ToArray();
+            body = header.Concat(NCSConstants.Splitter).Concat(body).ToArray();
             return body;
         }
 
-        private async Task SendMessageAsync(WebSocket webSocket, byte[] bytes, WebSocketMessageType messageType)
+        private List<Task> CreateTasks(ArraySegment<byte> segments,
+            WebSocketMessageType messageType,
+            bool endOfMessage,
+            params string[] connections)
         {
-            if (bytes == null)
+            return connections.Select(c =>
             {
-                return;
-            }
-
-            var length = bytes.Length;
-            if (length < ChunkSize)
-            {
-                var segments = new ArraySegment<byte>(bytes, 0, length);
-                if (!webSocket.CloseStatus.HasValue)
+                if (Connections.TryGetValue(c, out WebSocketTransport transport))
                 {
-                    await webSocket.SendAsync(segments,
-                       messageType,
-                       true,
-                       CancellationToken.None);
-                }
-
-                return;
-            }
-
-            using (var ms = new MemoryStream(bytes))
-            {
-                using (var br = new BinaryReader(ms))
-                {
-                    byte[] chunkedBytes = null;
-                    do
-                    {
-                        chunkedBytes = br.ReadBytes(ChunkSize);
-                        var endOfMessage = false;
-
-                        if (chunkedBytes.Length < ChunkSize)
-                            endOfMessage = true;
-
-                        var segments = new ArraySegment<byte>(chunkedBytes);
-
-                        if (!webSocket.CloseStatus.HasValue)
-                        {
-                            await webSocket.SendAsync(segments,
+                    return transport.WebSocket.SendAsync(segments,
                                messageType,
                                endOfMessage,
                                CancellationToken.None);
-                        }
-
-                        if (endOfMessage)
-                            break;
-
-                    } while (chunkedBytes.Length <= ChunkSize);
                 }
-            }
+
+                return Task.CompletedTask;
+
+            }).ToList();
         }
 
-        private async Task BroadcastMessageAsync(byte[] bytes, WebSocketMessageType messageType)
-        {
-            if (bytes == null)
+        private async Task SendDataAsync(Stream stream, 
+            WebSocketMessageType messageType,
+            params string[] connections)
+        {            
+            using (var br = new BinaryReader(stream, Encoding.UTF8))
             {
-                return;
-            }
-
-            var length = bytes.Length;
-            if (length < ChunkSize)
-            {
-                var segments = new ArraySegment<byte>(bytes, 0, length);
-
-                foreach (var connection in Connections)
+                int chunkedLength = 0;
+                byte[] chunkedBytes = null;
+                do
                 {
-                    var webSocket = connection.Value.WebSocket;
-                    if (!webSocket.CloseStatus.HasValue)
-                    {
-                        await webSocket.SendAsync(segments,
-                           messageType,
-                           true,
-                           CancellationToken.None);
-                    }
-                }
+                    chunkedBytes = br.ReadBytes(NCSConstants.ChunkSize);
+                    chunkedLength = chunkedBytes.Length;
+                    var endOfMessage = false;
 
-                return;
-            }
+                    if (chunkedLength < NCSConstants.ChunkSize)
+                        endOfMessage = true;
 
-            using (var ms = new MemoryStream(bytes))
-            {
-                using (var br = new BinaryReader(ms))
-                {
-                    byte[] chunkedBytes = null;
-                    do
-                    {
-                        chunkedBytes = br.ReadBytes(ChunkSize);
-                        var endOfMessage = false;
+                    var segments = new ArraySegment<byte>(chunkedBytes, 0, chunkedLength);
 
-                        if (chunkedBytes.Length < ChunkSize)
-                            endOfMessage = true;
+                    await Task.WhenAll(CreateTasks(segments, messageType, endOfMessage, connections));
 
-                        var segments = new ArraySegment<byte>(chunkedBytes);
+                    if (endOfMessage)
+                        break;
 
-                        foreach (var connection in Connections)
-                        {
-                            var webSocket = connection.Value.WebSocket;
-
-                            if (!webSocket.CloseStatus.HasValue)
-                            {
-                                await webSocket.SendAsync(segments,
-                                   messageType,
-                                   endOfMessage,
-                                   CancellationToken.None);
-                            }
-                        }
-
-                        if (endOfMessage)
-                            break;
-
-                    } while (chunkedBytes.Length <= ChunkSize);
-                }
+                } while (chunkedLength <= NCSConstants.ChunkSize);
             }
         }
 
@@ -204,9 +136,8 @@ namespace NetCoreStack.WebSockets
                 WebSocket = webSocket,
                 InvocatorContext = InvocatorContext
             };
-            
-            WebSocketTransport transport = null;
-            if (Connections.TryGetValue(connectionId, out transport))
+
+            if (Connections.TryGetValue(connectionId, out WebSocketTransport transport))
             {
                 transport.ReConnect(webSocket);
             }
@@ -243,10 +174,13 @@ namespace NetCoreStack.WebSockets
                 return;
             }
 
-            await BroadcastMessageAsync(context.ToBytes(), WebSocketMessageType.Text);
+            using (var stream = context.ToMemoryStream())
+            {
+                await SendDataAsync(stream, WebSocketMessageType.Text, Connections.Select(c => c.Key).ToArray());
+            }
         }
 
-        public async Task BroadcastBinaryAsync(byte[] inputs, IDictionary<string, object> properties)
+        public async Task BroadcastBinaryAsync(byte[] inputs, IDictionary<string, object> properties = null)
         {
             if (!Connections.Any())
             {
@@ -254,23 +188,55 @@ namespace NetCoreStack.WebSockets
             }
             
             var bytes = await PrepareFramesBytesAsync(inputs, properties);
-            await BroadcastMessageAsync(bytes, WebSocketMessageType.Binary);
+            using (var stream = new MemoryStream(bytes))
+            {
+                await SendDataAsync(stream, WebSocketMessageType.Binary, Connections.Select(c => c.Key).ToArray());
+            }
         }
 
-        public Task SendAsync(string connectionId, WebSocketMessageContext context)
+        public async Task BroadcastAsync(byte[] inputs, IDictionary<string, object> properties = null)
         {
             if (!Connections.Any())
             {
-                return Task.CompletedTask;
+                return;
             }
 
-            if (!Connections.TryGetValue(connectionId, out WebSocketTransport transport))
+            var bytes = await PrepareFramesBytesAsync(inputs, properties);
+            using (var stream = new MemoryStream(bytes))
             {
-                throw new ArgumentOutOfRangeException(nameof(transport));
+                await SendDataAsync(stream, WebSocketMessageType.Text, Connections.Select(c => c.Key).ToArray());
+            }
+        }
+
+        public async Task BroadcastBinaryAsync(WebSocketMessageContext context)
+        {
+            if (!Connections.Any())
+            {
+                return;
+            }
+
+            using (var ms = context.ToMemoryStream())
+            {
+                var bytes = await PrepareFramesBytesAsync(ms.ToArray());
+                using (var stream = new MemoryStream(bytes))
+                {
+                    await SendDataAsync(stream, WebSocketMessageType.Binary, Connections.Select(c => c.Key).ToArray());
+                }
+            }
+        }
+
+        public async Task SendAsync(string connectionId, WebSocketMessageContext context)
+        {
+            if (!Connections.Any())
+            {
+                return;
             }
 
             _headerProvider.Invoke(context.Header);
-            return SendMessageAsync(transport.WebSocket, context.ToBytes(), WebSocketMessageType.Text);
+            using (var stream = context.ToMemoryStream())
+            {
+                await SendDataAsync(stream, WebSocketMessageType.Text, connectionId);
+            }
         }
 
         public async Task SendBinaryAsync(string connectionId, byte[] input, IDictionary<string, object> properties)
@@ -286,38 +252,23 @@ namespace NetCoreStack.WebSockets
             }
 
             byte[] bytes = await PrepareFramesBytesAsync(input, properties);
-
-            await SendMessageAsync(transport.WebSocket, bytes, WebSocketMessageType.Binary);
+            using (var stream = new MemoryStream(bytes))
+            {
+                await SendDataAsync(stream, WebSocketMessageType.Binary, connectionId);
+            }
         }
 
-        public void CloseConnection(string connectionId, bool keepAlive)
+        public void CloseConnection(string connectionId)
         {
-            WebSocketTransport transport = null;
-            if (keepAlive)
+            if (Connections.TryRemove(connectionId, out WebSocketTransport transport))
             {
-                if (Connections.TryGetValue(connectionId, out transport))
-                {
-                    transport.Dispose();
-                }
-            }
-            else
-            {
-                if (Connections.TryRemove(connectionId, out transport))
-                {
-                    transport.Dispose();
-                }
+                transport.Dispose();
             }
         }
 
         public void CloseConnection(WebSocketReceiverContext context)
         {
-            bool keepAlive = false;
-            if (context.WebSocket.CloseStatus == WebSocketCloseStatus.EndpointUnavailable)
-            {
-                keepAlive = true;
-            }
-
-            CloseConnection(context.ConnectionId, keepAlive);
+            CloseConnection(context.ConnectionId);
         }
     }
 }

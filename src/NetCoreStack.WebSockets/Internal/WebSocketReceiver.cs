@@ -29,9 +29,21 @@ namespace NetCoreStack.WebSockets.Internal
             {
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
+                    byte[] inputs = null;
+                    using (var ms = new MemoryStream())
+                    {
+                        while (!result.EndOfMessage)
+                        {
+                            await ms.WriteAsync(buffer, 0, result.Count);
+                            result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                        }
+
+                        await ms.WriteAsync(buffer, 0, result.Count);
+                        inputs = ms.ToArray();
+                    }
                     try
                     {
-                        var context = result.ToContext(buffer);
+                        var context = result.ToContext(inputs);
                         var invocator = _context.GetInvocator(_serviceProvider);
                         if (invocator != null)
                         {
@@ -52,19 +64,11 @@ namespace NetCoreStack.WebSockets.Internal
                     {
                         while (!result.EndOfMessage)
                         {
-                            if (!result.CloseStatus.HasValue)
-                            {
-                                await ms.WriteAsync(buffer, 0, result.Count);
-                            }
+                            await ms.WriteAsync(buffer, 0, result.Count);
                             result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                         }
-                        if (result.EndOfMessage)
-                        {
-                            if (!result.CloseStatus.HasValue)
-                            {
-                                await ms.WriteAsync(buffer, 0, result.Count);
-                            }
-                        }
+
+                        await ms.WriteAsync(buffer, 0, result.Count);
                         binaryResult = ms.ToArray();
                     }
                     try

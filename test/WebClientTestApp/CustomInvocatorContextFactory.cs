@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Hosting;
-using NetCoreStack.WebSockets;
 using NetCoreStack.WebSockets.ProxyClient;
 using System;
 
