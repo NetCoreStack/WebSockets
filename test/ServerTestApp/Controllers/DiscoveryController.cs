@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets;
 using NetCoreStack.WebSockets.Internal;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using ServerTestApp.Models;
 using System;
 using System.Linq;
@@ -46,6 +47,27 @@ namespace ServerTestApp.Controllers
                 var obj = new { message = echo };
                 var webSocketContext = new WebSocketMessageContext { Command = WebSocketCommands.DataSend, Value = obj };
                 await _connectionManager.BroadcastAsync(webSocketContext);
+            }
+
+            return Ok();
+        }
+
+        [HttpPost(nameof(SendTextAsync))]
+        public async Task<IActionResult> SendTextAsync([FromBody]SimpleModel model)
+        {
+            if (model != null)
+            {
+                var echo = $"Echo from server '{model.Key}' - {DateTime.Now}";
+                var obj = new { message = echo };
+                var webSocketContext = new WebSocketMessageContext { Command = WebSocketCommands.DataSend, Value = obj };
+
+                var str = JsonConvert.SerializeObject(webSocketContext, new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                });
+
+                var bytes = Encoding.UTF8.GetBytes(str);
+                await _connectionManager.BroadcastAsync(bytes);
             }
 
             return Ok();

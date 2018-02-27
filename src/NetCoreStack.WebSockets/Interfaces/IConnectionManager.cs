@@ -23,9 +23,8 @@ namespace NetCoreStack.WebSockets
         /// Text message broadcaster
         /// </summary>
         /// <param name="inputs">Byte content</param>
-        /// <param name="properties">Extra properties, header</param>
         /// <returns></returns>
-        Task BroadcastAsync(byte[] inputs, IDictionary<string, object> properties = null);
+        Task BroadcastAsync(byte[] inputs);
 
         /// <summary>
         /// Binary message broadcaster

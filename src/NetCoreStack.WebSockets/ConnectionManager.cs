@@ -42,7 +42,7 @@ namespace NetCoreStack.WebSockets
             Connections = new ConcurrentDictionary<string, WebSocketTransport>(StringComparer.OrdinalIgnoreCase);
         }
 
-        private async Task<byte[]> PrepareFramesBytesAsync(byte[] body, IDictionary<string, object> properties = null)
+        private async Task<byte[]> ToBytesAsync(byte[] body, IDictionary<string, object> properties = null)
         {
             if (body == null)
             {
@@ -67,7 +67,7 @@ namespace NetCoreStack.WebSockets
 
             _headerProvider.Invoke(properties);
             string props = JsonConvert.SerializeObject(properties);
-            byte[] header = Encoding.UTF8.GetBytes($"{props}");
+            byte[] header = Encoding.UTF8.GetBytes(props);
 
             if (!compressed)
             {
@@ -187,22 +187,21 @@ namespace NetCoreStack.WebSockets
                 return;
             }
             
-            var bytes = await PrepareFramesBytesAsync(inputs, properties);
+            var bytes = await ToBytesAsync(inputs, properties);
             using (var stream = new MemoryStream(bytes))
             {
                 await SendDataAsync(stream, WebSocketMessageType.Binary, Connections.Select(c => c.Key).ToArray());
             }
         }
 
-        public async Task BroadcastAsync(byte[] inputs, IDictionary<string, object> properties = null)
+        public async Task BroadcastAsync(byte[] inputs)
         {
             if (!Connections.Any())
             {
                 return;
             }
 
-            var bytes = await PrepareFramesBytesAsync(inputs, properties);
-            using (var stream = new MemoryStream(bytes))
+            using (var stream = new MemoryStream(inputs))
             {
                 await SendDataAsync(stream, WebSocketMessageType.Text, Connections.Select(c => c.Key).ToArray());
             }
@@ -217,7 +216,7 @@ namespace NetCoreStack.WebSockets
 
             using (var ms = context.ToMemoryStream())
             {
-                var bytes = await PrepareFramesBytesAsync(ms.ToArray());
+                var bytes = await ToBytesAsync(ms.ToArray());
                 using (var stream = new MemoryStream(bytes))
                 {
                     await SendDataAsync(stream, WebSocketMessageType.Binary, Connections.Select(c => c.Key).ToArray());
@@ -251,7 +250,7 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentOutOfRangeException(nameof(transport));
             }
 
-            byte[] bytes = await PrepareFramesBytesAsync(input, properties);
+            byte[] bytes = await ToBytesAsync(input, properties);
             using (var stream = new MemoryStream(bytes))
             {
                 await SendDataAsync(stream, WebSocketMessageType.Binary, connectionId);
