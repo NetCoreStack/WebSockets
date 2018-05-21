@@ -2,6 +2,9 @@
 
 Minimalist websocket framework for .NET Core. You can use it on your APIs to communicate among your various client types.
 
+[![NuGet](https://img.shields.io/nuget/v/NetCoreStack.WebSockets.svg?longCache=true&style=flat-square)](https://www.nuget.org/packages/NetCoreStack.WebSockets)
+[![NuGet](https://img.shields.io/nuget/dt/NetCoreStack.WebSockets.svg?longCache=true&style=flat-square)](https://www.nuget.org/packages/NetCoreStack.WebSockets)
+
 [Latest release on Nuget](https://www.nuget.org/packages/NetCoreStack.WebSockets/)
 
 
