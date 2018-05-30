@@ -12,7 +12,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             _services = services;
         }
 
-        private void RegisterInternal<TInvocator>()
+        private void RegisterInternal<TInvocator>() 
             where TInvocator : IClientWebSocketCommandInvocator
         {
             var invocatorType = typeof(TInvocator);
