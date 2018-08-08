@@ -8,7 +8,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
     {
         string ConnectionId { get; }
         WebSocketState WebSocketState { get; }
-        Task ConnectAsync(CancellationTokenSource cancellationTokenSource);
+        Task ConnectAsync(CancellationToken cancellationToken);
         Task SendAsync(WebSocketMessageContext context);
         Task SendBinaryAsync(byte[] bytes);
         ClientInvocatorContext InvocatorContext { get; }

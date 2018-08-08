@@ -28,10 +28,10 @@ namespace NetCoreStack.WebSockets.ProxyClient
             _logger = context.LoggerFactory.CreateLogger<ClientWebSocketReceiver>();
         }
 
-        public async Task ReceiveAsync()
+        public async Task ReceiveAsync(CancellationToken cancellationToken)
         {
             var buffer = new byte[NCSConstants.ChunkSize];
-            var result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            var result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
             while (!result.CloseStatus.HasValue)
             {
                 if (result.MessageType == WebSocketMessageType.Text)
@@ -42,7 +42,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
                         while (!result.EndOfMessage)
                         {
                             await ms.WriteAsync(buffer, 0, result.Count);
-                            result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                            result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                         }
 
                         await ms.WriteAsync(buffer, 0, result.Count);
@@ -66,7 +66,17 @@ namespace NetCoreStack.WebSockets.ProxyClient
                     {
                         _logger.LogWarning(ex, "{0} An error occurred for message type: {1}", NCSConstants.WarningSymbol, WebSocketMessageType.Text);
                     }
-                    result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+                    try
+                    {
+                        result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+                    }
+                    catch (WebSocketException ex)
+                    {
+                        _logger.LogInformation("ClientWebSocketReceiver[Proxy] {0} has close status for connection: {1}", ex?.WebSocketErrorCode, _context.ConnectionId);
+                        _closeCallback?.Invoke(_context);
+                        return;
+                    }
                 }
 
                 if (result.MessageType == WebSocketMessageType.Binary)
@@ -77,7 +87,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
                         while (!result.EndOfMessage)
                         {
                             await ms.WriteAsync(buffer, 0, result.Count);
-                            result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                            result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                         }
 
                         await ms.WriteAsync(buffer, 0, result.Count);
@@ -94,13 +104,14 @@ namespace NetCoreStack.WebSockets.ProxyClient
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "{0} Invocator error occurred for message type: {1}", NCSConstants.WarningSymbol, WebSocketMessageType.Binary);
+                        _logger.LogWarning(ex, "ClientWebSocketReceiver {0} Invocator error occurred for message type: {1}", NCSConstants.WarningSymbol, WebSocketMessageType.Binary);
                     }
-                    result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                 }
             }
 
-            await _context.WebSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+            await _context.WebSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, cancellationToken);
+            _logger.LogInformation("ClientWebSocketReceiver[Proxy] {0} has close status for connection: {1}", result.CloseStatus, _context.ConnectionId);
             _closeCallback?.Invoke(_context);
         }
     }

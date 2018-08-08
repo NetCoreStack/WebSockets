@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets
@@ -10,7 +11,7 @@ namespace NetCoreStack.WebSockets
     {
         ConcurrentDictionary<string, WebSocketTransport> Connections { get; }
 
-        Task ConnectAsync(WebSocket webSocket, string connectionId, string connectorName = "");
+        Task ConnectAsync(WebSocket webSocket, string connectionId, string connectorName = "", CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         /// Text message broadcaster

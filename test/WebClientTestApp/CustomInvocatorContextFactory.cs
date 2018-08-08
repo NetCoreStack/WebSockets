@@ -16,7 +16,7 @@ namespace WebClientTestApp
         public ClientInvocatorContext CreateInvocatorContext()
         {
             return new ClientInvocatorContext(typeof(AnotherEndpointWebSocketCommandInvocator),
-                Environment.MachineName,
+                Environment.MachineName + "-WCT",
                 "localhost:5003",
                 uriPath: "ws",
                 query: "connectionId=" + Guid.NewGuid().ToString("N"));

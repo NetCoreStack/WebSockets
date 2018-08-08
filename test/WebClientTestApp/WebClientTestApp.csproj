@@ -14,5 +14,5 @@
     <ProjectReference Include="..\..\src\NetCoreStack.WebSockets\NetCoreStack.WebSockets.csproj" />
     <ProjectReference Include="..\Common.Libs\Common.Libs.csproj" />
   </ItemGroup>
-
+  
 </Project>

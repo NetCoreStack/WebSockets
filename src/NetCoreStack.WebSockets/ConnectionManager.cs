@@ -126,8 +126,19 @@ namespace NetCoreStack.WebSockets
             }
         }
 
-        public async Task ConnectAsync(WebSocket webSocket, string connectionId, string connectorName = "")
+        public async Task ConnectAsync(WebSocket webSocket, 
+            string connectionId, 
+            string connectorName = "", 
+            CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (cancellationToken != CancellationToken.None)
+            {
+                cancellationToken.Register(() =>
+                {
+                    CancellationGraceful();
+                });
+            }
+
             var receiverContext = new WebSocketReceiverContext
             {
                 Compressor = _compressor,
@@ -153,8 +164,8 @@ namespace NetCoreStack.WebSockets
                 await SendAsync(connectionId, context);
             }
 
-            var receiver = new WebSocketReceiver(_serviceProvider, receiverContext, CloseConnection);
-            await receiver.ReceiveAsync();
+            var receiver = new WebSocketReceiver(_serviceProvider, receiverContext, CloseConnection, _loggerFactory);
+            await receiver.ReceiveAsync(cancellationToken);
         }
 
         public async Task BroadcastAsync(WebSocketMessageContext context)
@@ -257,11 +268,20 @@ namespace NetCoreStack.WebSockets
             }
         }
 
+        public void CancellationGraceful()
+        {
+            foreach (KeyValuePair<string, WebSocketTransport> entry in Connections)
+            {
+                var transport = entry.Value;
+                _logger.LogInformation("Graceful cancellation. Close the websocket transport for: {0}", transport.ConnectorName);
+            }
+        }
+
         public void CloseConnection(string connectionId)
         {
             if (Connections.TryRemove(connectionId, out WebSocketTransport transport))
             {
-                transport.Dispose();
+                transport.WebSocket.Abort();
             }
         }
 

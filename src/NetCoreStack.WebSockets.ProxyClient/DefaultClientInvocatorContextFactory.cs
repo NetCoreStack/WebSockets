@@ -20,7 +20,19 @@ namespace NetCoreStack.WebSockets.ProxyClient
 
         public ClientInvocatorContext CreateInvocatorContext()
         {
-            return new ClientInvocatorContext(_proxyOptions.Invocator, _proxyOptions.ConnectorName, _proxyOptions.WebSocketHostAddress);
+            var context = new ClientInvocatorContext(_proxyOptions.Invocator, _proxyOptions.ConnectorName, _proxyOptions.WebSocketHostAddress);
+
+            if (_proxyOptions.OnConnectedAsync != null)
+            {
+                context.OnConnectedAsync = _proxyOptions.OnConnectedAsync;
+            }
+
+            if (_proxyOptions.OnDisconnectedAsync != null)
+            {
+                context.OnDisconnectedAsync = _proxyOptions.OnDisconnectedAsync;
+            }
+
+            return context;
         }
     }
 }

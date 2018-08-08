@@ -17,7 +17,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
                 throw new InvalidOperationException(string.Format("Required services are not registered - are you missing a call to AddProxyWebSockets?"));
         }
 
-        public static IApplicationBuilder UseProxyWebSockets(this IApplicationBuilder app, CancellationTokenSource cancellationTokenSource = null)
+        public static IApplicationBuilder UseProxyWebSockets(this IApplicationBuilder app, CancellationToken cancellationToken = default(CancellationToken))
         {
             ThrowIfServiceNotRegistered(app.ApplicationServices);
             var appLifeTime = app.ApplicationServices.GetService<IApplicationLifetime>();
@@ -26,7 +26,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
             {
                 InvocatorsHelper.EnsureHostPair(connector.InvocatorContext);
                 appLifeTime.ApplicationStopping.Register(OnShutdown, connector);
-                Task.Factory.StartNew(async () => await connector.ConnectAsync(cancellationTokenSource), TaskCreationOptions.LongRunning);
+                Task.Factory.StartNew(async () => await connector.ConnectAsync(cancellationToken), TaskCreationOptions.LongRunning);
             }
 
             return app;

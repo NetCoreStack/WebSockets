@@ -16,6 +16,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
         private readonly IServiceProvider _serviceProvider;
         private readonly IStreamCompressor _compressor;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger<ClientWebSocketConnector> _logger;
 
         public string ConnectionId
         {
@@ -43,18 +44,18 @@ namespace NetCoreStack.WebSockets.ProxyClient
             _serviceProvider = serviceProvider;
             _compressor = compressor;
             _loggerFactory = loggerFactory;
+            _logger = _loggerFactory.CreateLogger<ClientWebSocketConnector>();
         }
 
         public abstract ClientInvocatorContext InvocatorContext { get; }
 
-        private async Task<ClientWebSocketReceiver> TryConnectAsync(CancellationTokenSource cancellationTokenSource = null)
+        private async Task<ClientWebSocketReceiver> TryConnectAsync(CancellationToken cancellationToken)
         {
             _webSocket = new ClientWebSocket();
             _webSocket.Options.SetRequestHeader(NCSConstants.ConnectorName, InvocatorContext.ConnectorName);
             try
             {
-                CancellationToken token = cancellationTokenSource != null ? cancellationTokenSource.Token : CancellationToken.None;
-                await _webSocket.ConnectAsync(InvocatorContext.Uri, token);
+                await _webSocket.ConnectAsync(InvocatorContext.Uri, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -77,27 +78,42 @@ namespace NetCoreStack.WebSockets.ProxyClient
             return receiver;
         }
 
-        public async Task ConnectAsync(CancellationTokenSource cancellationTokenSource = null)
+        public async Task ConnectAsync(CancellationToken cancellationToken)
         {
-            if (cancellationTokenSource == null)
-                cancellationTokenSource = new CancellationTokenSource();
-
             ClientWebSocketReceiver receiver = null;
-            while (!cancellationTokenSource.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                receiver = await TryConnectAsync(cancellationTokenSource);
+                _logger.LogInformation("===TryConnectAsync to: {0}", InvocatorContext.Uri.ToString());
+                receiver = await TryConnectAsync(cancellationToken);
                 if (receiver != null && WebSocketState == WebSocketState.Open)
                 {
                     break;
                 }
+
+                _logger.LogInformation("===Retry...");
+                await Task.Delay(1000);
             }
 
-            await Task.WhenAll(receiver.ReceiveAsync());
-            
-            // Handshake down try re-connect
-            if (_webSocket.CloseStatus.HasValue)
+            _logger.LogInformation("===WebSocketConnected to: {0}", InvocatorContext.Uri.ToString());
+
+            if (InvocatorContext.OnConnectedAsync != null)
             {
-                await ConnectAsync(cancellationTokenSource);
+                await InvocatorContext.OnConnectedAsync(_webSocket);
+            }            
+
+            await Task.WhenAll(receiver.ReceiveAsync(cancellationToken));
+            
+            // Disconnected
+            if (_webSocket.CloseStatus.HasValue || _webSocket.State == WebSocketState.Aborted)
+            {
+                if (InvocatorContext.OnDisconnectedAsync != null)
+                {
+                    await InvocatorContext.OnDisconnectedAsync(_webSocket);
+                }
+                else
+                {
+                    await ConnectAsync(cancellationToken);
+                }                
             }
         }
 
@@ -139,9 +155,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
 
         internal void Close(ClientWebSocketReceiverContext context)
         {
-            context.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, 
-                nameof(ClientWebSocketReceiverContext), 
-                CancellationToken.None);
+            context.WebSocket.Abort();
         }
 
         internal void Close(string statusDescription)

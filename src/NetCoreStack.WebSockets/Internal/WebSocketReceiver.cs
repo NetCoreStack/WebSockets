@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
@@ -11,20 +12,25 @@ namespace NetCoreStack.WebSockets.Internal
         private readonly IServiceProvider _serviceProvider;
         private readonly WebSocketReceiverContext _context;
         private readonly Action<WebSocketReceiverContext> _closeCallback;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger<WebSocketReceiver> _logger;
 
         public WebSocketReceiver(IServiceProvider serviceProvider, 
             WebSocketReceiverContext context, 
-            Action<WebSocketReceiverContext> closeCallback)
+            Action<WebSocketReceiverContext> closeCallback,
+            ILoggerFactory loggerFactory)
         {
             _serviceProvider = serviceProvider;
             _context = context;
             _closeCallback = closeCallback;
+            _loggerFactory = loggerFactory;
+            _logger = _loggerFactory.CreateLogger<WebSocketReceiver>();
         }
 
-        private async Task InternalReceiveAsync()
+        public async Task ReceiveAsync(CancellationToken cancellationToken)
         {
             var buffer = new byte[NCSConstants.ChunkSize];
-            var result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            var result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
             while (!result.CloseStatus.HasValue)
             {
                 if (result.MessageType == WebSocketMessageType.Text)
@@ -35,7 +41,7 @@ namespace NetCoreStack.WebSockets.Internal
                         while (!result.EndOfMessage)
                         {
                             await ms.WriteAsync(buffer, 0, result.Count);
-                            result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                            result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                         }
 
                         await ms.WriteAsync(buffer, 0, result.Count);
@@ -54,7 +60,7 @@ namespace NetCoreStack.WebSockets.Internal
                     {
                         LogHelper.Log(_context, "Error", ex);
                     }
-                    result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                 }
 
                 if (result.MessageType == WebSocketMessageType.Binary)
@@ -65,7 +71,7 @@ namespace NetCoreStack.WebSockets.Internal
                         while (!result.EndOfMessage)
                         {
                             await ms.WriteAsync(buffer, 0, result.Count);
-                            result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                            result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                         }
 
                         await ms.WriteAsync(buffer, 0, result.Count);
@@ -84,28 +90,13 @@ namespace NetCoreStack.WebSockets.Internal
                     {
                         LogHelper.Log(_context, "Error", ex);
                     }
-                    result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    result = await _context.WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                 }
             }
 
-            await _context.WebSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+            await _context.WebSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, cancellationToken);
+            _logger.LogInformation("WebSocketReceiver[Server] {0} has close status for connection: {1}", result.CloseStatus, _context.ConnectionId);
             _closeCallback?.Invoke(_context);
-        }
-
-        public async Task ReceiveAsync()
-        {
-            try
-            {
-                await InternalReceiveAsync();
-            }
-            catch (Exception ex)
-            {
-                LogHelper.Log(_context, "Error", ex);
-            }
-            finally
-            {
-                _closeCallback?.Invoke(_context);
-            }
         }
     }
 }

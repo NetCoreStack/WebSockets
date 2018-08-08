@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using NetCoreStack.WebSockets.Interfaces;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets.Internal
@@ -10,10 +11,12 @@ namespace NetCoreStack.WebSockets.Internal
     public class WebSocketMiddleware
     {
         private readonly RequestDelegate _next;
+        private CancellationToken _cancellationToken;
 
-        public WebSocketMiddleware(RequestDelegate next)
+        public WebSocketMiddleware(RequestDelegate next, CancellationToken cancellationToken)
         {
             _next = next;
+            _cancellationToken = cancellationToken;
         }
 
         public async Task Invoke(HttpContext httpContext, 
@@ -60,7 +63,8 @@ namespace NetCoreStack.WebSockets.Internal
                 {
                     connectionId = Guid.NewGuid().ToString("N");
                 }
-                await manager.ConnectAsync(webSocket, connectionId: connectionId, connectorName: connectorName);
+
+                await manager.ConnectAsync(webSocket, connectionId: connectionId, connectorName: connectorName, cancellationToken: _cancellationToken);
             }
             else
             {

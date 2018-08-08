@@ -45,7 +45,6 @@ namespace WebClientTestApp
         
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
             if (env.IsDevelopment())
@@ -71,8 +70,6 @@ namespace WebClientTestApp
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
-
-            TelemetryDebugWriter.IsTracingDisabled = true;
         }    
     }
 }

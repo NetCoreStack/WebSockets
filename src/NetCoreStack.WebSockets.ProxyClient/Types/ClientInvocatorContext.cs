@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net.WebSockets;
+using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets.ProxyClient
 {
@@ -12,10 +14,16 @@ namespace NetCoreStack.WebSockets.ProxyClient
         public string ConnectorKey { get; }
         public Uri Uri { get; }
 
+        public Func<WebSocket, Task> OnConnectedAsync { get; set; }
+
+        public Func<WebSocket, Task> OnDisconnectedAsync { get; set; }
+
         public ClientInvocatorContext(Type invocator, string connectorName, string hostAddress,
             WebSocketSupportedSchemes scheme = WebSocketSupportedSchemes.WS,
             string uriPath = "",
-            string query = "")
+            string query = "",
+            Func<WebSocket, Task> onConnectedAsync = null,
+            Func<WebSocket, Task> onDisconnectedAsync = null)
             :base(invocator)
         {
             ConnectorName = connectorName ?? throw new ArgumentNullException(nameof(connectorName));
@@ -23,6 +31,9 @@ namespace NetCoreStack.WebSockets.ProxyClient
             Scheme = scheme;
             UriPath = uriPath;
             Query = query;
+
+            OnConnectedAsync = onConnectedAsync;
+            OnDisconnectedAsync = onDisconnectedAsync;
 
             var schemeStr = Scheme == WebSocketSupportedSchemes.WS ? "ws" : "wss";
             var uriBuilder = new UriBuilder(new Uri($"{schemeStr}://{HostAddress}"));
