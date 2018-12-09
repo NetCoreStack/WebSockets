@@ -87,6 +87,13 @@ namespace NetCoreStack.WebSockets
             {
                 if (Connections.TryGetValue(c, out WebSocketTransport transport))
                 {
+                    if (transport.WebSocket.State == WebSocketState.Aborted || 
+                        transport.WebSocket.CloseStatus.HasValue)
+                    {
+                        Connections.TryRemove(c, out WebSocketTransport removed);
+                        return Task.CompletedTask;
+                    }
+
                     return transport.WebSocket.SendAsync(segments,
                                messageType,
                                endOfMessage,
