@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using System.Threading.Tasks;
 
-namespace WebClientTestApp
+namespace WebClientTestApp2
 {
     public class Program
     {

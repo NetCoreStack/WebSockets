@@ -1,5 +1,4 @@
 ﻿using Common.Libs;
-using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -37,16 +36,11 @@ namespace WebClientTestApp
             // Runtime context factory
             // builder.Register<AnotherEndpointWebSocketCommandInvocator, CustomInvocatorContextFactory>();
 
-            // Add framework services.
-            services.AddMvc(options => {
-                options.Filters.Add(new ClientExceptionFilterAttribute());
-            });
+            services.AddControllersWithViews();
         }
         
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddDebug();
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -64,11 +58,11 @@ namespace WebClientTestApp
             // User Agent WebSockets for Browsers
             app.UseNativeWebSockets();
 
-            app.UseMvc(routes =>
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapDefaultControllerRoute();
             });
         }    
     }

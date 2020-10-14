@@ -1,18 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
-    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\NetCoreStack.WebSockets.ProxyClient\NetCoreStack.WebSockets.ProxyClient.csproj" />
     <ProjectReference Include="..\Common.Libs\Common.Libs.csproj" />
     <ProjectReference Include="..\..\src\NetCoreStack.WebSockets\NetCoreStack.WebSockets.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.2.0" />
-  </ItemGroup>
-
+  
 </Project>

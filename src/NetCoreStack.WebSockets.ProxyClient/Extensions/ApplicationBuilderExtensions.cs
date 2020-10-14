@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -20,7 +20,7 @@ namespace NetCoreStack.WebSockets.ProxyClient
         public static IApplicationBuilder UseProxyWebSockets(this IApplicationBuilder app, CancellationToken cancellationToken = default(CancellationToken))
         {
             ThrowIfServiceNotRegistered(app.ApplicationServices);
-            var appLifeTime = app.ApplicationServices.GetService<IApplicationLifetime>();
+            var appLifeTime = app.ApplicationServices.GetService<IHostApplicationLifetime>();
             IList<IWebSocketConnector> connectors = InvocatorFactory.GetConnectors(app.ApplicationServices);
             foreach (var connector in connectors)
             {

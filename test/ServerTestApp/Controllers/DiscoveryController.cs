@@ -4,13 +4,12 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets;
 using NetCoreStack.WebSockets.Internal;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using ServerTestApp.Models;
 using System;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -61,10 +60,7 @@ namespace ServerTestApp.Controllers
                 var obj = new { message = echo };
                 var webSocketContext = new WebSocketMessageContext { Command = WebSocketCommands.DataSend, Value = obj };
 
-                var str = JsonConvert.SerializeObject(webSocketContext, new JsonSerializerSettings
-                {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver()
-                });
+                var str = JsonSerializer.Serialize(webSocketContext);
 
                 var bytes = Encoding.UTF8.GetBytes(str);
                 await _connectionManager.BroadcastAsync(bytes);
@@ -78,7 +74,7 @@ namespace ServerTestApp.Controllers
         {
             if (model != null)
             {
-                var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(model));
+                var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(model));
                 await _connectionManager.BroadcastBinaryAsync(bytes, new RouteValueDictionary(new { Id = 1, SomeProperty = "Some value" }));
             }
             

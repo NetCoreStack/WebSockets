@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets.ProxyClient;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Text.Json;
 
 namespace NetCoreStack.WebSockets.Internal
 {
@@ -28,7 +28,7 @@ namespace NetCoreStack.WebSockets.Internal
                     values.Add("Message", content);
                     values.Add(nameof(context.HostAddress), context.HostAddress);
                     values.Add(nameof(context.ConnectorName), context.ConnectorName);
-                    return JsonConvert.SerializeObject(values);
+                    return JsonSerializer.Serialize(values);
                 });
         }
     }

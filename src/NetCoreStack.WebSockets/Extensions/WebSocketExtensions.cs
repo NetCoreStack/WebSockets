@@ -1,11 +1,11 @@
 ﻿using NetCoreStack.WebSockets.Interfaces;
 using NetCoreStack.WebSockets.Internal;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace NetCoreStack.WebSockets
@@ -28,7 +28,7 @@ namespace NetCoreStack.WebSockets
             WebSocketMessageContext webSocketContext = new WebSocketMessageContext();
             try
             {
-                webSocketContext = JsonConvert.DeserializeObject<WebSocketMessageContext>(content);
+                webSocketContext = JsonSerializer.Deserialize<WebSocketMessageContext>(content);
             }
             catch (Exception ex)
             {
@@ -69,7 +69,7 @@ namespace NetCoreStack.WebSockets
                 {
                     try
                     {
-                        webSocketContext.Header = JsonConvert.DeserializeObject<Dictionary<string, object>>(data);
+                        webSocketContext.Header = JsonSerializer.Deserialize<Dictionary<string, object>>(data);
                     }
                     catch (Exception ex)
                     {
@@ -103,7 +103,7 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentNullException(nameof(webSocketContext));
             }
 
-            var content = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(webSocketContext));
+            var content = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(webSocketContext));
             return new ArraySegment<byte>(content, 0, content.Length);
         }
 
@@ -114,7 +114,7 @@ namespace NetCoreStack.WebSockets
                 throw new ArgumentNullException(nameof(webSocketContext));
             }
 
-            return new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(webSocketContext)));
+            return new MemoryStream(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(webSocketContext)));
         }
 
         public static string GetConnectionId(this WebSocketMessageContext context)

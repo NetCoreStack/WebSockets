@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Builder.Internal;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets.ProxyClient;
 using System;
@@ -17,7 +17,7 @@ namespace NetCoreStack.WebSockets.Tests
         private readonly IServiceCollection _services;
         private readonly IApplicationBuilder _appBuilder;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IHostEnvironment _hostingEnvironment;
 
         protected IServiceProvider Services => _appBuilder.ApplicationServices;
 
@@ -29,7 +29,7 @@ namespace NetCoreStack.WebSockets.Tests
             {
                 ApplicationName = typeof(ProxyBuilderTests).Namespace,
                 ContentRootPath = Directory.GetCurrentDirectory(),
-                EnvironmentName = EnvironmentName.Development
+                EnvironmentName = Environments.Development
             };
             
 
@@ -49,7 +49,7 @@ namespace NetCoreStack.WebSockets.Tests
             var lifetimeStart = new ManualResetEvent(false);
             var lifetimeContinue = new ManualResetEvent(false);
 
-            IApplicationLifetime applicationLifetime = new ApplicationLifetime(new Logger<ApplicationLifetime>(_loggerFactory));
+            IHostApplicationLifetime applicationLifetime = new ApplicationLifetime(new Logger<ApplicationLifetime>(_loggerFactory));
             _services.AddSingleton(applicationLifetime);
 
             _services.AddSingleton(_hostingEnvironment);

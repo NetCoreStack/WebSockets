@@ -3,11 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets;
-using Swashbuckle.Swagger.Model;
-using System;
-using System.IO;
 
 namespace ServerTestApp
 {
@@ -22,18 +20,6 @@ namespace ServerTestApp
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSwaggerGen(c =>
-            {
-                c.SingleApiVersion(new Info
-                {
-                    Version = "v1",
-                    Title = "API V1",
-                    TermsOfService = "None"
-                });
-
-                c.DescribeAllEnumsAsStrings();
-            });
-
             services.AddMemoryCache();
             services.AddDistributedRedisCache(options =>
             {
@@ -45,31 +31,35 @@ namespace ServerTestApp
 
             // Add NetCoreStack Native Socket Services.
             services.AddNativeWebSockets<ServerWebSocketCommandInvocator>();
-            
-            services.AddMvc();
+
+            services.AddOpenApiDocument();
+
+            services.AddControllers();
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app)
         {
-            loggerFactory.AddConsole();
-
-            var appLifeTime = app.ApplicationServices.GetService<IApplicationLifetime>();
+            var appLifeTime = app.ApplicationServices.GetService<IHostApplicationLifetime>();
             app.UseNativeWebSockets(appLifeTime.ApplicationStopped);
 
-            app.UseMvc();
+            app.UseOpenApi(config => {
+                config.PostProcess = (document, request) =>
+                {
+                    document.Info.Version = "v1";
+                    document.Info.Title = $"Platform API";
+                };
+            }); // serve OpenAPI/Swagger documents
 
-            app.UseSwagger();
-            app.UseSwaggerUi();
+            app.UseSwaggerUi3(); // serve Swagger UI
+
+            app.UseReDoc(); // serve ReDoc UI
+
+            app.UseRouting();
+
+            app.UseEndpoints(routes =>
+            {
+                routes.MapControllers();
+            });
         }
-
-        public static void Main(string[] args)
-        {
-            BuildWebHost(args).Run();
-        }
-
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .Build();
     }
 }

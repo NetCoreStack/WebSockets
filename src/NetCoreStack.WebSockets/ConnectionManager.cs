@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NetCoreStack.WebSockets.Interfaces;
 using NetCoreStack.WebSockets.Internal;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -66,7 +66,7 @@ namespace NetCoreStack.WebSockets
             }
 
             _headerProvider.Invoke(properties);
-            string props = JsonConvert.SerializeObject(properties);
+            string props = JsonSerializer.Serialize(properties);
             byte[] header = Encoding.UTF8.GetBytes(props);
 
             if (!compressed)

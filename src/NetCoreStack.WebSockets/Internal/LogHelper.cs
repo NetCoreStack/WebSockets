@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Text.Json;
 
 namespace NetCoreStack.WebSockets.Internal
 {
@@ -29,7 +29,7 @@ namespace NetCoreStack.WebSockets.Internal
                 (msg, exception) => {
                     var values = new Dictionary<string, object>();
                     values.Add("Message", content);
-                    return JsonConvert.SerializeObject(values);
+                    return JsonSerializer.Serialize(values);
                 });
         }
     }

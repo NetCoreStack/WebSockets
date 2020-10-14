@@ -2,12 +2,13 @@
 using Microsoft.Extensions.Hosting;
 using System.Threading.Tasks;
 
-namespace WebClientTestApp
+
+namespace ServerTestApp
 {
     public class Program
     {
         public static Task Main(string[] args)
-                            => BuildHost(args).RunAsync();
+                    => BuildHost(args).RunAsync();
 
         public static IHost BuildHost(string[] args) => CreateHostBuilder(args).Build();
 

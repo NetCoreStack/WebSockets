@@ -1,7 +1,7 @@
 ﻿using NetCoreStack.WebSockets;
 using NetCoreStack.WebSockets.ProxyClient;
-using Newtonsoft.Json;
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ConsoleAppProxyClient
@@ -10,7 +10,7 @@ namespace ConsoleAppProxyClient
     {
         public async Task InvokeAsync(WebSocketMessageContext context)
         {
-            var values = await Task.Run(() => JsonConvert.SerializeObject(context));
+            var values = await Task.Run(() => JsonSerializer.Serialize(context));
             Console.WriteLine(values);
         }
     }
